@@ -1,0 +1,15 @@
+<Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="x64" />
+  </Configurations>
+  <Project Path="../AudioTech.Android/AudioTech.Android.csproj">
+    <Platform Solution="*|x64" Project="x64" />
+  </Project>
+  <Project Path="../AudioTech.Desktop/AudioTech.Desktop.csproj">
+    <Platform Solution="*|x64" Project="x64" />
+  </Project>
+  <Project Path="AudioTech.csproj">
+    <Platform Solution="*|x64" Project="x64" />
+  </Project>
+</Solution>

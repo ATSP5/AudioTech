@@ -1,0 +1,8 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:AudioTech.ViewModels"
+             x:Class="AudioTech.Views.MainView"
+             x:DataType="vm:MainViewModel">
+  <!-- Single-view platform shell — navigates via MainViewModel.CurrentPage -->
+  <ContentControl Content="{Binding CurrentPage}"/>
+</UserControl>

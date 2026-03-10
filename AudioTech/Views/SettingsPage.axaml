@@ -1,0 +1,187 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:AudioTech.ViewModels"
+             x:Class="AudioTech.Views.SettingsPage"
+             x:DataType="vm:SettingsViewModel"
+             Background="#06060C">
+
+  <ScrollViewer Padding="0,8">
+    <StackPanel Spacing="24" Margin="20,12">
+
+      <!-- ── Audio Sources ──────────────────────────────── -->
+      <StackPanel Spacing="8">
+        <Grid ColumnDefinitions="*,Auto">
+          <TextBlock Grid.Column="0" Text="AUDIO SOURCES"
+                     Foreground="#555" FontSize="10"
+                     FontWeight="SemiBold" LetterSpacing="1.5"
+                     VerticalAlignment="Center"/>
+          <Button Grid.Column="1"
+                  Command="{Binding RefreshDevicesCommand}"
+                  Content="↺ Refresh"
+                  Background="Transparent" Foreground="#777"
+                  BorderThickness="1" BorderBrush="#333"
+                  Padding="8,3" FontSize="10" CornerRadius="4"/>
+        </Grid>
+
+        <ItemsControl ItemsSource="{Binding Channels}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="vm:MicrophoneChannelConfig">
+              <Border Background="#0E0E1C" CornerRadius="6"
+                      Padding="12,10" Margin="0,3">
+                <Grid ColumnDefinitions="Auto,Auto,*,Auto">
+
+                  <!-- Color swatch -->
+                  <Border Grid.Column="0"
+                          Width="4" Height="28" CornerRadius="2"
+                          Margin="0,0,10,0">
+                    <Border.Background>
+                      <SolidColorBrush Color="{Binding Color}"/>
+                    </Border.Background>
+                  </Border>
+
+                  <!-- Enable toggle -->
+                  <CheckBox Grid.Column="1"
+                            IsChecked="{Binding IsEnabled}"
+                            Margin="0,0,10,0"
+                            VerticalAlignment="Center"
+                            ToolTip.Tip="Enable this channel"/>
+
+                  <!-- Device selector -->
+                  <ComboBox Grid.Column="2"
+                            ItemsSource="{Binding AvailableDevices}"
+                            SelectedIndex="{Binding SelectedDeviceIndex}"
+                            IsEnabled="{Binding IsEnabled}"
+                            HorizontalAlignment="Stretch"
+                            Background="#1A1A2A" BorderBrush="#333"
+                            PlaceholderText="No device selected"/>
+
+                  <!-- Channel label -->
+                  <TextBlock Grid.Column="3"
+                             Text="{Binding Label}"
+                             Foreground="#666" FontSize="10"
+                             VerticalAlignment="Center"
+                             Margin="10,0,0,0"/>
+
+                </Grid>
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </StackPanel>
+
+      <!-- ── FFT Settings ───────────────────────────────── -->
+      <StackPanel Spacing="8">
+        <TextBlock Text="FFT SETTINGS" Foreground="#555" FontSize="10"
+                   FontWeight="SemiBold" LetterSpacing="1.5"/>
+        <Border Background="#0E0E1C" CornerRadius="6" Padding="14,12">
+          <StackPanel Spacing="12">
+
+            <Grid ColumnDefinitions="140,*">
+              <TextBlock Grid.Column="0" Text="FFT Size"
+                         Foreground="#AAA" VerticalAlignment="Center" FontSize="13"/>
+              <ComboBox Grid.Column="1"
+                        ItemsSource="{Binding FftSizes}"
+                        SelectedItem="{Binding SelectedFftSize}"
+                        HorizontalAlignment="Stretch"
+                        Background="#1A1A2A" BorderBrush="#333"/>
+            </Grid>
+
+            <Grid ColumnDefinitions="140,*">
+              <TextBlock Grid.Column="0" Text="Sample Rate"
+                         Foreground="#AAA" VerticalAlignment="Center" FontSize="13"/>
+              <ComboBox Grid.Column="1"
+                        ItemsSource="{Binding SampleRates}"
+                        SelectedItem="{Binding SelectedSampleRate}"
+                        HorizontalAlignment="Stretch"
+                        Background="#1A1A2A" BorderBrush="#333"/>
+            </Grid>
+
+          </StackPanel>
+        </Border>
+      </StackPanel>
+
+      <!-- ── Noise Filter ──────────────────────────────── -->
+      <StackPanel Spacing="8">
+        <TextBlock Text="NOISE FILTER" Foreground="#555" FontSize="10"
+                   FontWeight="SemiBold" LetterSpacing="1.5"/>
+        <Border Background="#0E0E1C" CornerRadius="6" Padding="14,12">
+          <StackPanel Spacing="12">
+
+            <!-- Filter type -->
+            <Grid ColumnDefinitions="140,*">
+              <TextBlock Grid.Column="0" Text="Filter Type"
+                         Foreground="#AAA" VerticalAlignment="Center" FontSize="13"/>
+              <ComboBox Grid.Column="1"
+                        ItemsSource="{Binding FilterOptions}"
+                        SelectedItem="{Binding SelectedFilter}"
+                        HorizontalAlignment="Stretch"
+                        Background="#1A1A2A" BorderBrush="#333"/>
+            </Grid>
+
+            <!-- Strength slider (disabled when No Filter) -->
+            <Grid ColumnDefinitions="140,*,52" IsEnabled="{Binding IsFilterEnabled}">
+              <TextBlock Grid.Column="0" Text="Strength"
+                         Foreground="#AAA" VerticalAlignment="Center" FontSize="13"/>
+              <Slider Grid.Column="1"
+                      Value="{Binding FilterStrength}"
+                      Minimum="0" Maximum="{Binding FilterStrengthMax}"
+                      TickFrequency="1"
+                      VerticalAlignment="Center"/>
+              <TextBlock Grid.Column="2"
+                         Text="{Binding FilterStrengthDisplay}"
+                         Foreground="#888" FontSize="11"
+                         VerticalAlignment="Center" TextAlignment="Right"/>
+            </Grid>
+
+          </StackPanel>
+        </Border>
+      </StackPanel>
+
+      <!-- ── Display Range ──────────────────────────────── -->
+      <StackPanel Spacing="8">
+        <TextBlock Text="DISPLAY RANGE" Foreground="#555" FontSize="10"
+                   FontWeight="SemiBold" LetterSpacing="1.5"/>
+        <Border Background="#0E0E1C" CornerRadius="6" Padding="14,12">
+          <StackPanel Spacing="12">
+
+            <Grid ColumnDefinitions="140,*,Auto,*,Auto">
+              <TextBlock Grid.Column="0" Text="dB Range"
+                         Foreground="#AAA" VerticalAlignment="Center" FontSize="13"/>
+              <NumericUpDown Grid.Column="1" Value="{Binding MinDb}"
+                             Minimum="-160" Maximum="-20" Increment="5"
+                             FormatString="0"
+                             Background="#1A1A2A" BorderBrush="#333"/>
+              <TextBlock Grid.Column="2" Text=" — " Foreground="#555"
+                         VerticalAlignment="Center" Margin="4,0"/>
+              <NumericUpDown Grid.Column="3" Value="{Binding MaxDb}"
+                             Minimum="-80" Maximum="0" Increment="5"
+                             FormatString="0"
+                             Background="#1A1A2A" BorderBrush="#333"/>
+              <TextBlock Grid.Column="4" Text=" dB" Foreground="#555"
+                         VerticalAlignment="Center" Margin="4,0"/>
+            </Grid>
+
+            <Grid ColumnDefinitions="140,*,Auto,*,Auto">
+              <TextBlock Grid.Column="0" Text="Frequency Range"
+                         Foreground="#AAA" VerticalAlignment="Center" FontSize="13"/>
+              <NumericUpDown Grid.Column="1" Value="{Binding MinFrequency}"
+                             Minimum="10" Maximum="1000" Increment="10"
+                             FormatString="0"
+                             Background="#1A1A2A" BorderBrush="#333"/>
+              <TextBlock Grid.Column="2" Text=" — " Foreground="#555"
+                         VerticalAlignment="Center" Margin="4,0"/>
+              <NumericUpDown Grid.Column="3" Value="{Binding MaxFrequency}"
+                             Minimum="1000" Maximum="48000" Increment="1000"
+                             FormatString="0"
+                             Background="#1A1A2A" BorderBrush="#333"/>
+              <TextBlock Grid.Column="4" Text=" Hz" Foreground="#555"
+                         VerticalAlignment="Center" Margin="4,0"/>
+            </Grid>
+
+          </StackPanel>
+        </Border>
+      </StackPanel>
+
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

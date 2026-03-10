@@ -1,0 +1,43 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:AudioTech.ViewModels"
+             xmlns:controls="using:AudioTech.Controls"
+             x:Class="AudioTech.Views.MainPage"
+             x:DataType="vm:MainPageViewModel"
+             Background="#06060C">
+
+  <Grid RowDefinitions="36,*,*">
+
+    <!-- ── Toolbar ─────────────────────────────────────── -->
+    <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Background="#0B0B16">
+      <TextBlock Grid.Column="0" Text="{Binding StatusText}"
+                 Foreground="#777" FontSize="11"
+                 VerticalAlignment="Center" Margin="12,0"/>
+      <Button Grid.Column="1"
+              Command="{Binding ToggleCaptureCommand}"
+              Content="{Binding ToggleButtonText}"
+              Background="Transparent" Foreground="#CCC"
+              BorderThickness="0" Padding="16,0" Height="36"
+              FontSize="12"/>
+    </Grid>
+
+    <!-- ── FFT Graph (multi-channel + phase diff + legend) ─ -->
+    <controls:FftGraphControl
+        Grid.Row="1"
+        Channels="{Binding Channels}"
+        PhaseDifference="{Binding PhaseDifferenceData}"
+        PhaseDiffSampleRate="{Binding PhaseDiffSampleRate}"
+        MinDb="{Binding MinDb}"
+        MaxDb="{Binding MaxDb}"
+        MinFrequency="{Binding MinFrequency}"
+        MaxFrequency="{Binding MaxFrequency}"/>
+
+    <!-- ── Waterfall (mixed signal) ────────────────────── -->
+    <controls:WaterfallControl
+        Grid.Row="2"
+        FftData="{Binding MixedFftData}"
+        MinDb="{Binding MinDb}"
+        MaxDb="{Binding MaxDb}"/>
+
+  </Grid>
+</UserControl>

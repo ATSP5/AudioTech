@@ -1,0 +1,86 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:AudioTech.ViewModels"
+        xmlns:views="using:AudioTech.Views"
+        x:Class="AudioTech.Views.MainWindow"
+        x:DataType="vm:MainViewModel"
+        Icon="/Assets/avalonia-logo.ico"
+        Title="AudioTech"
+        Width="520" Height="820"
+        MinWidth="380" MinHeight="500"
+        Background="#08080C"
+        ExtendClientAreaToDecorationsHint="False">
+
+  <Window.DataTemplates>
+    <DataTemplate DataType="vm:MainPageViewModel">
+      <views:MainPage />
+    </DataTemplate>
+    <DataTemplate DataType="vm:SettingsViewModel">
+      <views:SettingsPage />
+    </DataTemplate>
+  </Window.DataTemplates>
+
+  <SplitView IsPaneOpen="{Binding IsPaneOpen}"
+             DisplayMode="CompactOverlay"
+             CompactPaneLength="48"
+             OpenPaneLength="180"
+             PanePlacement="Left"
+             PaneBackground="#0C0C1A">
+
+    <!-- ── Navigation Pane ─────────────────────────────── -->
+    <SplitView.Pane>
+      <Grid RowDefinitions="Auto,*,Auto">
+
+        <!-- Hamburger -->
+        <Button Grid.Row="0"
+                Command="{Binding TogglePaneCommand}"
+                Width="48" Height="48"
+                Background="Transparent" BorderThickness="0"
+                HorizontalContentAlignment="Center"
+                VerticalContentAlignment="Center">
+          <PathIcon Width="18" Height="18" Foreground="#AAA"
+                    Data="M2,6 H22 M2,12 H22 M2,18 H22"/>
+        </Button>
+
+        <!-- Nav items -->
+        <StackPanel Grid.Row="1" Margin="0,8,0,0">
+
+          <!-- Main -->
+          <Button Command="{Binding NavigateToMainCommand}"
+                  Height="48" Background="Transparent" BorderThickness="0"
+                  HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                  Padding="0" ToolTip.Tip="Main">
+            <Grid ColumnDefinitions="48,*">
+              <PathIcon Grid.Column="0" Width="18" Height="18" Foreground="#CCC"
+                        HorizontalAlignment="Center"
+                        Data="M3,12 L12,4 L21,12 V20 H15 V14 H9 V20 H3 Z"/>
+              <TextBlock Grid.Column="1" Text="Main"
+                         Foreground="#CCC" FontSize="13"
+                         VerticalAlignment="Center"/>
+            </Grid>
+          </Button>
+
+          <!-- Settings -->
+          <Button Command="{Binding NavigateToSettingsCommand}"
+                  Height="48" Background="Transparent" BorderThickness="0"
+                  HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                  Padding="0" ToolTip.Tip="Settings">
+            <Grid ColumnDefinitions="48,*">
+              <PathIcon Grid.Column="0" Width="18" Height="18" Foreground="#CCC"
+                        HorizontalAlignment="Center"
+                        Data="M12,8 A4,4 0 1 1 12,16 A4,4 0 1 1 12,8 M12,2 L13.09,5.26 C13.97,5.54 14.78,5.99 15.47,6.57 L18.91,5.73 L21,9.27 L18.36,11.45 C18.45,11.96 18.5,12.48 18.5,13 C18.5,13.52 18.45,14.04 18.36,14.55 L21,16.73 L18.91,20.27 L15.47,19.43 C14.78,20.01 13.97,20.46 13.09,20.74 L12,24 L10.91,20.74 C10.03,20.46 9.22,20.01 8.53,19.43 L5.09,20.27 L3,16.73 L5.64,14.55 C5.55,14.04 5.5,13.52 5.5,13 C5.5,12.48 5.55,11.96 5.64,11.45 L3,9.27 L5.09,5.73 L8.53,6.57 C9.22,5.99 10.03,5.54 10.91,5.26 Z"/>
+              <TextBlock Grid.Column="1" Text="Settings"
+                         Foreground="#CCC" FontSize="13"
+                         VerticalAlignment="Center"/>
+            </Grid>
+          </Button>
+
+        </StackPanel>
+      </Grid>
+    </SplitView.Pane>
+
+    <!-- ── Page Content ────────────────────────────────── -->
+    <ContentControl Content="{Binding CurrentPage}"/>
+
+  </SplitView>
+</Window>
