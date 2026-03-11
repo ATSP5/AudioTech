@@ -6,7 +6,7 @@
              x:DataType="vm:MainPageViewModel"
              Background="#06060C">
 
-  <Grid RowDefinitions="36,*,*">
+  <Grid RowDefinitions="36,Auto,*,*">
 
     <!-- ── Toolbar ─────────────────────────────────────── -->
     <Grid Grid.Row="0" ColumnDefinitions="*,Auto,Auto" Background="#0B0B16">
@@ -40,9 +40,91 @@
               FontSize="12"/>
     </Grid>
 
+    <!-- ── Record / Play panel ──────────────────────────── -->
+    <Border Grid.Row="1"
+            Background="#0A0A18"
+            BorderBrush="#1C1C30" BorderThickness="0,1,0,1"
+            Padding="10,0"
+            x:DataType="vm:RecordPlayViewModel"
+            DataContext="{Binding RecordPlay}">
+      <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,12,Auto,8,*,8,Auto"
+            Height="44">
+
+        <!-- ● Rec -->
+        <Button Grid.Column="0"
+                Command="{Binding RecordCommand}"
+                IsEnabled="{Binding CanRecord}"
+                Width="36" Height="28"
+                Background="Transparent" BorderThickness="1" BorderBrush="#333"
+                CornerRadius="4" Padding="0" Margin="0,0,4,0"
+                ToolTip.Tip="Record">
+          <Ellipse Width="10" Height="10" Fill="#E53935"/>
+        </Button>
+
+        <!-- ■ Stop -->
+        <Button Grid.Column="1"
+                Command="{Binding StopCommand}"
+                IsEnabled="{Binding CanStop}"
+                Width="36" Height="28"
+                Background="Transparent" BorderThickness="1" BorderBrush="#333"
+                CornerRadius="4" Padding="0" Margin="0,0,4,0"
+                ToolTip.Tip="Stop">
+          <Rectangle Width="10" Height="10" Fill="#CCC"/>
+        </Button>
+
+        <!-- ▶ Play -->
+        <Button Grid.Column="2"
+                Command="{Binding PlayCommand}"
+                IsEnabled="{Binding CanPlay}"
+                Width="36" Height="28"
+                Background="Transparent" BorderThickness="1" BorderBrush="#333"
+                CornerRadius="4" Padding="0" Margin="0,0,4,0"
+                ToolTip.Tip="Play">
+          <PathIcon Width="10" Height="10" Foreground="#CCC"
+                    Data="M4,3 L19,12 L4,21 Z"/>
+        </Button>
+
+        <!-- 📂 Browse -->
+        <Button Grid.Column="3"
+                Command="{Binding BrowseCommand}"
+                IsEnabled="{Binding CanBrowse}"
+                Width="36" Height="28"
+                Background="Transparent" BorderThickness="1" BorderBrush="#333"
+                CornerRadius="4" Padding="0"
+                ToolTip.Tip="Open audio file">
+          <PathIcon Width="12" Height="12" Foreground="#CCC"
+                    Data="M10,4 H4 A2,2 0 0 0 2,6 V18 A2,2 0 0 0 4,20 H20 A2,2 0 0 0 22,18 V8 A2,2 0 0 0 20,6 H12 Z"/>
+        </Button>
+
+        <!-- Time display -->
+        <TextBlock Grid.Column="5"
+                   Text="{Binding TimeDisplay}"
+                   Foreground="#888" FontSize="11"
+                   FontFamily="Consolas,monospace"
+                   VerticalAlignment="Center"
+                   MinWidth="96"/>
+
+        <!-- Progress slider -->
+        <Slider Grid.Column="7"
+                x:Name="RecordProgressSlider"
+                Value="{Binding Progress, Mode=OneWay}"
+                Minimum="0" Maximum="1"
+                IsEnabled="{Binding IsProgressEnabled}"
+                VerticalAlignment="Center"/>
+
+        <!-- File name -->
+        <TextBlock Grid.Column="9"
+                   Text="{Binding FileLabel}"
+                   Foreground="#555" FontSize="10"
+                   VerticalAlignment="Center"
+                   MaxWidth="120"
+                   TextTrimming="CharacterEllipsis"/>
+      </Grid>
+    </Border>
+
     <!-- ── FFT Graph (multi-channel + phase diff + legend) ─ -->
     <controls:FftGraphControl
-        Grid.Row="1"
+        Grid.Row="2"
         Channels="{Binding Channels}"
         PhaseDifference="{Binding PhaseDifferenceData}"
         PhaseDiffSampleRate="{Binding PhaseDiffSampleRate}"
@@ -53,10 +135,11 @@
 
     <!-- ── Waterfall (mixed signal) ────────────────────── -->
     <controls:WaterfallControl
-        Grid.Row="2"
+        Grid.Row="3"
         FftData="{Binding MixedFftData}"
         MinDb="{Binding MinDb}"
-        MaxDb="{Binding MaxDb}"/>
+        MaxDb="{Binding MaxDb}"
+        ResetToken="{Binding WaterfallResetToken}"/>
 
   </Grid>
 </UserControl>

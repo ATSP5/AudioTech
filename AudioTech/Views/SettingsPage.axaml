@@ -150,8 +150,10 @@
                         Background="#1A1A2A" BorderBrush="#333"/>
             </Grid>
 
-            <!-- Strength slider (disabled when No Filter) -->
-            <Grid ColumnDefinitions="140,*,52" IsEnabled="{Binding IsFilterEnabled}">
+            <!-- Strength slider (hidden when Equalizer selected) -->
+            <Grid ColumnDefinitions="140,*,52"
+                  IsEnabled="{Binding IsFilterEnabled}"
+                  IsVisible="{Binding IsStrengthVisible}">
               <TextBlock Grid.Column="0" Text="Strength"
                          Foreground="#AAA" VerticalAlignment="Center" FontSize="13"/>
               <Slider Grid.Column="1"
@@ -167,6 +169,80 @@
 
           </StackPanel>
         </Border>
+      </StackPanel>
+
+      <!-- ── Equalizer ─────────────────────────────────── -->
+      <StackPanel Spacing="8" IsVisible="{Binding IsEqualizerSelected}">
+      <StackPanel Spacing="8"
+                  DataContext="{Binding Equalizer}"
+                  x:DataType="vm:EqualizerViewModel">
+        <Grid ColumnDefinitions="*,Auto">
+          <TextBlock Grid.Column="0" Text="EQUALIZER"
+                     Foreground="#555" FontSize="10"
+                     FontWeight="SemiBold" LetterSpacing="1.5"
+                     VerticalAlignment="Center"/>
+          <Button Grid.Column="1"
+                  Command="{Binding ResetEqCommand}"
+                  Content="Reset EQ"
+                  Background="Transparent" Foreground="#777"
+                  BorderThickness="1" BorderBrush="#333"
+                  Padding="8,3" FontSize="10" CornerRadius="4"/>
+        </Grid>
+
+        <Border Background="#0E0E1C" CornerRadius="6" Padding="14,12">
+          <StackPanel Spacing="16">
+
+            <!-- Band sliders -->
+            <ItemsControl ItemsSource="{Binding Bands}">
+              <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                  <StackPanel Orientation="Horizontal" Spacing="4"/>
+                </ItemsPanelTemplate>
+              </ItemsControl.ItemsPanel>
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="vm:EqualizerBandViewModel">
+                  <StackPanel Width="48" Spacing="4" HorizontalAlignment="Center">
+                    <TextBlock Text="{Binding GainDisplay}"
+                               Foreground="#888" FontSize="10"
+                               TextAlignment="Center"/>
+                    <Slider Value="{Binding GainDb}"
+                            Minimum="-20" Maximum="20"
+                            TickFrequency="1"
+                            Orientation="Vertical"
+                            Height="120"
+                            HorizontalAlignment="Center"/>
+                    <TextBlock Text="{Binding Label}"
+                               Foreground="#666" FontSize="9"
+                               TextAlignment="Center"
+                               TextWrapping="Wrap"/>
+                  </StackPanel>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <!-- Balance row -->
+            <Grid ColumnDefinitions="Auto,*,Auto,80">
+              <TextBlock Grid.Column="0" Text="L"
+                         Foreground="#AAA" FontSize="12"
+                         VerticalAlignment="Center" Margin="0,0,8,0"/>
+              <Slider Grid.Column="1"
+                      Value="{Binding BalanceDb}"
+                      Minimum="-20" Maximum="20"
+                      TickFrequency="0.5"
+                      VerticalAlignment="Center"/>
+              <TextBlock Grid.Column="2" Text="R"
+                         Foreground="#AAA" FontSize="12"
+                         VerticalAlignment="Center" Margin="8,0"/>
+              <TextBlock Grid.Column="3"
+                         Text="{Binding BalanceDisplay}"
+                         Foreground="#888" FontSize="11"
+                         VerticalAlignment="Center"
+                         TextAlignment="Right"/>
+            </Grid>
+
+          </StackPanel>
+        </Border>
+      </StackPanel>
       </StackPanel>
 
       <!-- ── Display Range ──────────────────────────────── -->

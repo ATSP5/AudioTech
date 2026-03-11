@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cd \"D:\\\\Adam\\\\GitHubWorkspace\\\\AudioAnalyser\" && dotnet build AudioTech/AudioTech.csproj 2>&1 | tail -40)",
+      "Bash(cd \"D:\\\\Adam\\\\GitHubWorkspace\\\\AudioAnalyser\" && dotnet build AudioTech/AudioTech.csproj 2>&1 | tail -20)"
+    ]
+  }
+}

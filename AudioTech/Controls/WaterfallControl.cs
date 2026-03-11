@@ -19,9 +19,17 @@ public class WaterfallControl : Control
     public static readonly StyledProperty<double> MaxDbProperty =
         AvaloniaProperty.Register<WaterfallControl, double>(nameof(MaxDb), -40);
 
-    public float[]? FftData { get => GetValue(FftDataProperty); set => SetValue(FftDataProperty, value); }
-    public double   MinDb   { get => GetValue(MinDbProperty);   set => SetValue(MinDbProperty, value); }
-    public double   MaxDb   { get => GetValue(MaxDbProperty);   set => SetValue(MaxDbProperty, value); }
+    /// <summary>
+    /// Increment this token to clear all waterfall history immediately.
+    /// Only the change matters; the actual value is irrelevant.
+    /// </summary>
+    public static readonly StyledProperty<int> ResetTokenProperty =
+        AvaloniaProperty.Register<WaterfallControl, int>(nameof(ResetToken));
+
+    public float[]? FftData    { get => GetValue(FftDataProperty);    set => SetValue(FftDataProperty, value); }
+    public double   MinDb      { get => GetValue(MinDbProperty);      set => SetValue(MinDbProperty, value); }
+    public double   MaxDb      { get => GetValue(MaxDbProperty);      set => SetValue(MaxDbProperty, value); }
+    public int      ResetToken { get => GetValue(ResetTokenProperty); set => SetValue(ResetTokenProperty, value); }
 
     // ── Internal state ───────────────────────────────────────────────────────
 
@@ -35,6 +43,11 @@ public class WaterfallControl : Control
     static WaterfallControl()
     {
         FftDataProperty.Changed.AddClassHandler<WaterfallControl>((ctrl, _) => ctrl.OnFftDataChanged());
+        ResetTokenProperty.Changed.AddClassHandler<WaterfallControl>((ctrl, _) =>
+        {
+            ctrl.ClearBitmap();
+            ctrl.InvalidateVisual();
+        });
     }
 
     // ── Lifecycle ────────────────────────────────────────────────────────────

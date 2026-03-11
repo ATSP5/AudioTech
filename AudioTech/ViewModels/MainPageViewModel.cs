@@ -27,6 +27,10 @@ public partial class MainPageViewModel : ViewModelBase
     [NotifyPropertyChangedFor(nameof(ToggleButtonText))]
     private bool _isRunning;
 
+    /// <summary>Incrementing this clears the waterfall history.</summary>
+    [ObservableProperty]
+    private int _waterfallResetToken;
+
     [ObservableProperty]
     private bool _isPassthroughEnabled;
 
@@ -66,11 +70,35 @@ public partial class MainPageViewModel : ViewModelBase
 
     // ── ctor ──────────────────────────────────────────────────────────────────
 
-    public MainPageViewModel(IAudioCaptureService captureService, SettingsViewModel settings)
+    public RecordPlayViewModel RecordPlay { get; }
+
+    public MainPageViewModel(
+        IAudioCaptureService captureService,
+        SettingsViewModel    settings,
+        RecordPlayViewModel  recordPlay)
     {
         _captureService = captureService;
         _settings       = settings;
+        RecordPlay      = recordPlay;
+
         _captureService.FftFrameReady += OnFftFrameReady;
+        RecordPlay.PlaybackFftReady   += OnFftFrameReady; // playback uses channel 0
+
+        // When playback starts: auto-stop mic capture and disable the toggle button.
+        // When playback ends: re-enable it.
+        RecordPlay.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName != nameof(RecordPlayViewModel.IsPlaying)) return;
+
+            if (RecordPlay.IsPlaying)
+            {
+                // Stop mic capture if running
+                if (IsRunning) StopCaptureCommand.Execute(null);
+                WaterfallResetToken++;
+            }
+
+            ToggleCaptureCommand.NotifyCanExecuteChanged();
+        };
 
         // Live-update filter while capture is running
         _settings.PropertyChanged += (_, e) =>
@@ -219,6 +247,7 @@ public partial class MainPageViewModel : ViewModelBase
         {
             IsRunning  = true;
             StatusText = $"Running — {_captureService.ActiveChannels.Count} channel(s)";
+            WaterfallResetToken++;
         }
     }
 
@@ -235,10 +264,12 @@ public partial class MainPageViewModel : ViewModelBase
         StatusText          = "Stopped";
     }
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanToggleCaptureImpl))]
     private void ToggleCapture()
     {
         if (IsRunning) StopCaptureCommand.Execute(null);
         else           StartCaptureCommand.Execute(null);
     }
+
+    private bool CanToggleCaptureImpl() => !RecordPlay.IsPlaying;
 }

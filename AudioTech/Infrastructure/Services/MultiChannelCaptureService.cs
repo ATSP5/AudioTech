@@ -52,8 +52,9 @@ public sealed class MultiChannelCaptureService : IAudioCaptureService
     private readonly ConcurrentDictionary<int, ChannelState> _channels = new();
 
     // Current filter config — applied when new channels start and when changed live
-    private FilterType _filterType     = FilterType.None;
-    private float      _filterStrength = 0f;
+    private FilterType         _filterType        = FilterType.None;
+    private float              _filterStrength    = 0f;
+    private EqualizerSettings? _equalizerSettings;
 
     // Per-channel gain (linear) — persists across stop/start cycles
     private readonly ConcurrentDictionary<int, float> _channelGains = new();
@@ -64,7 +65,8 @@ public sealed class MultiChannelCaptureService : IAudioCaptureService
     private BufferedWaveProvider?    _playbackBuffer;
     private readonly object          _playbackLock = new();
 
-    public event EventHandler<FftFrame>? FftFrameReady;
+    public event EventHandler<FftFrame>?          FftFrameReady;
+    public event EventHandler<FilteredSamplesArgs>? FilteredSamplesReady;
     public bool IsAnyRunning     => !_channels.IsEmpty;
     public IReadOnlyList<int> ActiveChannels =>
         _channels.Keys.OrderBy(k => k).ToList().AsReadOnly();
@@ -102,7 +104,7 @@ public sealed class MultiChannelCaptureService : IAudioCaptureService
             FftSize      = fftSize,
             WaveIn       = waveIn,
             SampleBuffer = new float[fftSize],
-            Filter       = FilterFactory.Create(_filterType, _filterStrength),
+            Filter       = FilterFactory.Create(_filterType, _filterStrength, sampleRate, _equalizerSettings, channelIndex),
             GainLinear   = _channelGains.TryGetValue(channelIndex, out var g) ? g : 1f
         };
 
@@ -124,12 +126,22 @@ public sealed class MultiChannelCaptureService : IAudioCaptureService
         _filterType     = type;
         _filterStrength = Math.Clamp(strength, 0f, 1f);
 
-        foreach (var state in _channels.Values)
+        foreach (var (channelIdx, state) in _channels)
         {
-            var newFilter = FilterFactory.Create(type, strength);
+            var newFilter = FilterFactory.Create(type, strength, state.SampleRate, _equalizerSettings, channelIdx);
             newFilter.Reset();
             state.Filter = newFilter;   // volatile write — visible to processing thread
         }
+    }
+
+    public void SetEqualizerSettings(EqualizerSettings settings)
+    {
+        _equalizerSettings = settings;
+
+        // If the Equalizer filter is already active, recreate filter instances
+        // so they reference the new settings object.
+        if (_filterType == FilterType.Equalizer)
+            ConfigureFilter(FilterType.Equalizer, 0f);
     }
 
     public void SetChannelGain(int channelIndex, float gainDb)
@@ -215,6 +227,11 @@ public sealed class MultiChannelCaptureService : IAudioCaptureService
 
                 // Apply filter in-place before FFT (volatile read of Filter)
                 state.Filter.Apply(samples);
+
+                // Notify subscribers (recording service) with post-filter samples.
+                // Each dequeued block is a unique array so no clone is required.
+                FilteredSamplesReady?.Invoke(this,
+                    new FilteredSamplesArgs(channelIndex, samples, state.SampleRate));
 
                 // Passthrough: send filtered audio to speaker (channel 0 only)
                 if (_passthroughEnabled && channelIndex == 0)

@@ -9,5 +9,6 @@ public enum FilterType
     MovingAverage,
     WhiteNoiseSubtraction,
     PurpleNoiseSubtraction,
-    BrownNoiseSubtraction
+    BrownNoiseSubtraction,
+    Equalizer
 }

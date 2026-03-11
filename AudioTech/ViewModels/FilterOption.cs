@@ -19,5 +19,6 @@ public sealed record FilterOption(FilterType Type, string DisplayName, bool IsDb
         new(FilterType.WhiteNoiseSubtraction, "White Noise Subtraction", IsDbBased: true),
         new(FilterType.PurpleNoiseSubtraction,"Purple Noise Subtraction (+6 dB/oct)", IsDbBased: true),
         new(FilterType.BrownNoiseSubtraction, "Brown Noise Subtraction (−6 dB/oct)",  IsDbBased: true),
+        new(FilterType.Equalizer,             "Equalizer"),
     ];
 }

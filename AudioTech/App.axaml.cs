@@ -47,7 +47,9 @@ public partial class App : global::Avalonia.Application
         services.AddInfrastructure();
 
         // ViewModels — singletons so shared state (settings, capture) persists
+        services.AddSingleton<EqualizerViewModel>();
         services.AddSingleton<SettingsViewModel>();
+        services.AddSingleton<RecordPlayViewModel>();
         services.AddSingleton<MainPageViewModel>();
         services.AddSingleton<MainViewModel>();
 

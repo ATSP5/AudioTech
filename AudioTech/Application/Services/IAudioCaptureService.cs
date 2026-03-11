@@ -13,6 +13,9 @@ public sealed record FftFrame(
     int    SampleRate,
     int    FftSize);
 
+/// <summary>Filtered (gain-applied + noise-filtered) samples from one capture channel.</summary>
+public sealed record FilteredSamplesArgs(int ChannelIndex, float[] Samples, int SampleRate);
+
 public interface IAudioCaptureService : IDisposable
 {
     IReadOnlyList<CaptureDevice> GetAvailableDevices();
@@ -28,6 +31,13 @@ public interface IAudioCaptureService : IDisposable
     /// Safe to call while channels are running.
     /// </summary>
     void ConfigureFilter(FilterType type, float strength);
+
+    /// <summary>
+    /// Register the shared <see cref="EqualizerSettings"/> instance used when
+    /// <see cref="FilterType.Equalizer"/> is the active filter type.
+    /// Must be called before starting channels with the Equalizer filter.
+    /// </summary>
+    void SetEqualizerSettings(EqualizerSettings settings);
 
     /// <summary>
     /// Set the input gain (in dB) for the given channel.
@@ -47,4 +57,10 @@ public interface IAudioCaptureService : IDisposable
 
     /// <summary>Raised on a ThreadPool thread — marshal to UI thread as needed.</summary>
     event EventHandler<FftFrame>? FftFrameReady;
+
+    /// <summary>
+    /// Raised after gain + filter are applied, before the FFT window.
+    /// Suitable for recording. Raised on a ThreadPool thread.
+    /// </summary>
+    event EventHandler<FilteredSamplesArgs>? FilteredSamplesReady;
 }

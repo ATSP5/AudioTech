@@ -27,6 +27,8 @@ public static class DependencyInjection
         // Infrastructure services
         services.AddSingleton<IAudioAnalysisService, AudioAnalysisService>();
         services.AddSingleton<IAudioCaptureService, MultiChannelCaptureService>();
+        services.AddSingleton<IAudioRecordPlayService, AudioRecordPlayService>();
+        services.AddSingleton<IDialogService, AvaloniaDialogService>();
 
         // Command handlers
         services.AddTransient<ICommandHandler<LoadAudioFileCommand, Guid>, LoadAudioFileCommandHandler>();

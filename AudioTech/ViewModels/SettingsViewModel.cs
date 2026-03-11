@@ -12,6 +12,10 @@ public partial class SettingsViewModel : ViewModelBase
 {
     private readonly IAudioCaptureService _captureService;
 
+    // ── Equalizer ─────────────────────────────────────────────────────────────
+
+    public EqualizerViewModel Equalizer { get; }
+
     // ── Microphone channels ──────────────────────────────────────────────────
 
     public ObservableCollection<MicrophoneChannelConfig> Channels { get; } = [];
@@ -35,7 +39,9 @@ public partial class SettingsViewModel : ViewModelBase
         nameof(FilterStrengthMax),
         nameof(FilterStrengthUnit),
         nameof(FilterStrengthDisplay),
-        nameof(FilterStrengthValue))]
+        nameof(FilterStrengthValue),
+        nameof(IsStrengthVisible),
+        nameof(IsEqualizerSelected))]
     private FilterOption _selectedFilter = FilterOption.All[0]; // "No Filter"
 
     [ObservableProperty]
@@ -44,8 +50,12 @@ public partial class SettingsViewModel : ViewModelBase
 
     // ── Filter computed properties ────────────────────────────────────────────
 
-    public bool IsFilterEnabled  => SelectedFilter.Type != FilterType.None;
-    public bool IsFilterDbBased  => SelectedFilter.IsDbBased;
+    public bool IsFilterEnabled    => SelectedFilter.Type != FilterType.None;
+    public bool IsFilterDbBased    => SelectedFilter.IsDbBased;
+    public bool IsEqualizerSelected => SelectedFilter.Type == FilterType.Equalizer;
+
+    /// <summary>Hide the generic strength slider when Equalizer is active.</summary>
+    public bool IsStrengthVisible  => IsFilterEnabled && !IsEqualizerSelected;
 
     /// <summary>Slider maximum: 60 dB for spectral filters, 100 for %-based.</summary>
     public double FilterStrengthMax => IsFilterDbBased ? 60 : 100;
@@ -79,9 +89,14 @@ public partial class SettingsViewModel : ViewModelBase
 
     // ── ctor ─────────────────────────────────────────────────────────────────
 
-    public SettingsViewModel(IAudioCaptureService captureService)
+    public SettingsViewModel(IAudioCaptureService captureService, EqualizerViewModel equalizer)
     {
         _captureService = captureService;
+        Equalizer       = equalizer;
+
+        // Register the shared EQ settings object up-front so filters created
+        // with FilterType.Equalizer always reference the correct instance.
+        _captureService.SetEqualizerSettings(equalizer.Settings);
 
         Channels.Add(new MicrophoneChannelConfig(0) { IsEnabled = true });
         Channels.Add(new MicrophoneChannelConfig(1));

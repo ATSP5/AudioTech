@@ -14,8 +14,18 @@ public static class FilterFactory
     /// For spectral filters (WhiteNoiseSubtraction, PurpleNoiseSubtraction)
     /// <paramref name="strength"/> is the raw noise floor in dB (e.g. 0–60).
     /// </para>
+    /// <para>
+    /// For <see cref="FilterType.Equalizer"/>, <paramref name="equalizerSettings"/>
+    /// must be supplied; <paramref name="sampleRate"/> and
+    /// <paramref name="channelIndex"/> determine BiQuad coefficients and balance.
+    /// </para>
     /// </summary>
-    public static INoiseFilter Create(FilterType type, float strength)
+    public static INoiseFilter Create(
+        FilterType         type,
+        float              strength,
+        int                sampleRate      = 44100,
+        EqualizerSettings? equalizerSettings = null,
+        int                channelIndex    = 0)
     {
         return type switch
         {
@@ -24,10 +34,14 @@ public static class FilterFactory
             FilterType.NoiseGate     => new NoiseGateFilter(Math.Clamp(strength, 0f, 1f)),
             FilterType.MovingAverage => new MovingAverageFilter(Math.Clamp(strength, 0f, 1f)),
 
-            // strength = dB floor value, passed through unchanged
             FilterType.WhiteNoiseSubtraction  => new WhiteNoiseSubtractionFilter(strength),
             FilterType.PurpleNoiseSubtraction => new PurpleNoiseSubtractionFilter(strength),
             FilterType.BrownNoiseSubtraction  => new BrownNoiseSubtractionFilter(strength),
+
+            FilterType.Equalizer => new EqualizerFilter(
+                equalizerSettings ?? new EqualizerSettings(),
+                channelIndex,
+                sampleRate),
 
             _ => new PassthroughFilter()
         };
