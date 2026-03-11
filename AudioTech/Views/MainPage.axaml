@@ -9,11 +9,30 @@
   <Grid RowDefinitions="36,*,*">
 
     <!-- ── Toolbar ─────────────────────────────────────── -->
-    <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Background="#0B0B16">
+    <Grid Grid.Row="0" ColumnDefinitions="*,Auto,Auto" Background="#0B0B16">
       <TextBlock Grid.Column="0" Text="{Binding StatusText}"
                  Foreground="#777" FontSize="11"
                  VerticalAlignment="Center" Margin="12,0"/>
-      <Button Grid.Column="1"
+      <ToggleButton Grid.Column="1"
+                    IsChecked="{Binding IsPassthroughEnabled}"
+                    Content="Pass"
+                    Background="Transparent"
+                    Foreground="#CCC"
+                    BorderThickness="1"
+                    BorderBrush="#333"
+                    Padding="14,0" Height="26"
+                    Margin="0,0,8,0"
+                    FontSize="12"
+                    VerticalAlignment="Center">
+        <ToggleButton.Styles>
+          <Style Selector="ToggleButton:checked">
+            <Setter Property="Background" Value="#1A3A2A"/>
+            <Setter Property="Foreground" Value="#4CAF50"/>
+            <Setter Property="BorderBrush" Value="#4CAF50"/>
+          </Style>
+        </ToggleButton.Styles>
+      </ToggleButton>
+      <Button Grid.Column="2"
               Command="{Binding ToggleCaptureCommand}"
               Content="{Binding ToggleButtonText}"
               Background="Transparent" Foreground="#CCC"

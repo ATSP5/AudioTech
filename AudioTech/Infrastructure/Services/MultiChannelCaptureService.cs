@@ -30,6 +30,9 @@ public sealed class MultiChannelCaptureService : IAudioCaptureService
         public float[]  SampleBuffer { get; set; } = [];
         public int      BufferPos    { get; set; }
 
+        // Per-channel input gain (linear), applied before the filter
+        public volatile float GainLinear = 1f;
+
         // Swappable filter — replaced atomically when ConfigureFilter is called
         public volatile INoiseFilter Filter = new PassthroughFilter();
 
@@ -51,6 +54,15 @@ public sealed class MultiChannelCaptureService : IAudioCaptureService
     // Current filter config — applied when new channels start and when changed live
     private FilterType _filterType     = FilterType.None;
     private float      _filterStrength = 0f;
+
+    // Per-channel gain (linear) — persists across stop/start cycles
+    private readonly ConcurrentDictionary<int, float> _channelGains = new();
+
+    // Passthrough: route filtered audio from ch0 to the default speaker
+    private volatile bool            _passthroughEnabled;
+    private WaveOutEvent?            _waveOut;
+    private BufferedWaveProvider?    _playbackBuffer;
+    private readonly object          _playbackLock = new();
 
     public event EventHandler<FftFrame>? FftFrameReady;
     public bool IsAnyRunning     => !_channels.IsEmpty;
@@ -90,7 +102,8 @@ public sealed class MultiChannelCaptureService : IAudioCaptureService
             FftSize      = fftSize,
             WaveIn       = waveIn,
             SampleBuffer = new float[fftSize],
-            Filter       = FilterFactory.Create(_filterType, _filterStrength)
+            Filter       = FilterFactory.Create(_filterType, _filterStrength),
+            GainLinear   = _channelGains.TryGetValue(channelIndex, out var g) ? g : 1f
         };
 
         waveIn.DataAvailable += (_, e) => EnqueueSamples(state, e);
@@ -119,6 +132,15 @@ public sealed class MultiChannelCaptureService : IAudioCaptureService
         }
     }
 
+    public void SetChannelGain(int channelIndex, float gainDb)
+    {
+        float linear = gainDb <= 0f ? 1f : MathF.Pow(10f, gainDb / 20f);
+        _channelGains[channelIndex] = linear;
+
+        if (_channels.TryGetValue(channelIndex, out var state))
+            state.GainLinear = linear;   // volatile write — visible to processing thread
+    }
+
     public void StopChannel(int channelIndex)
     {
         if (_channels.TryRemove(channelIndex, out var state))
@@ -129,6 +151,30 @@ public sealed class MultiChannelCaptureService : IAudioCaptureService
     {
         foreach (var key in _channels.Keys.ToList())
             StopChannel(key);
+
+        lock (_playbackLock)
+            StopPlaybackCore();
+    }
+
+    public void SetPassthrough(bool enabled)
+    {
+        lock (_playbackLock)
+        {
+            _passthroughEnabled = enabled;
+            if (!enabled)
+                StopPlaybackCore();
+            // When enabled, playback is lazily started in the processing loop
+            // using the actual sample rate of channel 0.
+        }
+    }
+
+    // Must be called under _playbackLock.
+    private void StopPlaybackCore()
+    {
+        _waveOut?.Stop();
+        _waveOut?.Dispose();
+        _waveOut         = null;
+        _playbackBuffer  = null;
     }
 
     public void Dispose() => StopAll();
@@ -161,8 +207,19 @@ public sealed class MultiChannelCaptureService : IAudioCaptureService
         {
             if (state.PendingBlocks.TryDequeue(out var samples))
             {
+                // Apply per-channel gain before filter (volatile read of GainLinear)
+                float gain = state.GainLinear;
+                if (gain != 1f)
+                    for (int i = 0; i < samples.Length; i++)
+                        samples[i] *= gain;
+
                 // Apply filter in-place before FFT (volatile read of Filter)
                 state.Filter.Apply(samples);
+
+                // Passthrough: send filtered audio to speaker (channel 0 only)
+                if (_passthroughEnabled && channelIndex == 0)
+                    SendToSpeaker(samples, state.SampleRate);
+
                 ProcessFft(channelIndex, state, samples);
             }
             else
@@ -170,6 +227,38 @@ public sealed class MultiChannelCaptureService : IAudioCaptureService
                 await Task.Delay(5, ct).ConfigureAwait(false);
             }
         }
+    }
+
+    private void SendToSpeaker(float[] samples, int sampleRate)
+    {
+        // Lazily initialise WaveOut the first time we have audio to play.
+        if (_playbackBuffer == null)
+        {
+            lock (_playbackLock)
+            {
+                if (_playbackBuffer == null && _passthroughEnabled)
+                {
+                    var format = WaveFormat.CreateIeeeFloatWaveFormat(sampleRate, 1);
+                    var pb     = new BufferedWaveProvider(format)
+                    {
+                        DiscardOnBufferOverflow = true,
+                        BufferDuration          = TimeSpan.FromMilliseconds(200)
+                    };
+                    var wo = new WaveOutEvent();
+                    wo.Init(pb);
+                    wo.Play();
+                    _waveOut        = wo;
+                    _playbackBuffer = pb;   // published last — acts as a gate
+                }
+            }
+        }
+
+        var pb2 = _playbackBuffer;
+        if (pb2 == null) return;
+
+        var bytes = new byte[samples.Length * sizeof(float)];
+        Buffer.BlockCopy(samples, 0, bytes, 0, bytes.Length);
+        pb2.AddSamples(bytes, 0, bytes.Length);
     }
 
     private void ProcessFft(int channelIndex, ChannelState state, float[] samples)

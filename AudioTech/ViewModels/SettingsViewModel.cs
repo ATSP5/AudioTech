@@ -86,6 +86,13 @@ public partial class SettingsViewModel : ViewModelBase
         Channels.Add(new MicrophoneChannelConfig(0) { IsEnabled = true });
         Channels.Add(new MicrophoneChannelConfig(1));
 
+        foreach (var ch in Channels)
+            ch.PropertyChanged += (_, e) =>
+            {
+                if (e.PropertyName == nameof(MicrophoneChannelConfig.GainDb))
+                    _captureService.SetChannelGain(ch.ChannelIndex, (float)ch.GainDb);
+            };
+
         RefreshDevicesCommand.Execute(null);
     }
 

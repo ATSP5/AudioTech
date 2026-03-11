@@ -28,6 +28,12 @@ public partial class MainPageViewModel : ViewModelBase
     private bool _isRunning;
 
     [ObservableProperty]
+    private bool _isPassthroughEnabled;
+
+    partial void OnIsPassthroughEnabledChanged(bool value) =>
+        _captureService.SetPassthrough(value);
+
+    [ObservableProperty]
     private string _statusText = "Stopped";
 
     /// <summary>Per-channel magnitude data for the FFT graph.</summary>

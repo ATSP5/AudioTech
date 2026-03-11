@@ -20,6 +20,12 @@ public partial class MicrophoneChannelConfig : ObservableObject
     [ObservableProperty]
     private int _selectedDeviceIndex;
 
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(GainDisplay))]
+    private double _gainDb = 0;
+
+    public string GainDisplay => $"{GainDb:0} dB";
+
     public MicrophoneChannelConfig(int channelIndex)
     {
         ChannelIndex = channelIndex;

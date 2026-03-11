@@ -29,6 +29,19 @@ public interface IAudioCaptureService : IDisposable
     /// </summary>
     void ConfigureFilter(FilterType type, float strength);
 
+    /// <summary>
+    /// Set the input gain (in dB) for the given channel.
+    /// Gain is applied to raw samples before any filter.
+    /// Safe to call while capture is running or stopped.
+    /// </summary>
+    void SetChannelGain(int channelIndex, float gainDb);
+
+    /// <summary>
+    /// Route filtered audio from channel 0 to the default speaker output.
+    /// Safe to call while capture is running or stopped.
+    /// </summary>
+    void SetPassthrough(bool enabled);
+
     bool IsAnyRunning { get; }
     IReadOnlyList<int> ActiveChannels { get; }
 
