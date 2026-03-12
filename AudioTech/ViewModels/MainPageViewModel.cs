@@ -59,6 +59,9 @@ public partial class MainPageViewModel : ViewModelBase
     [ObservableProperty]
     private float[]? _mixedFftData;
 
+    [ObservableProperty]
+    private int _mixedFftSampleRate = 44100;
+
     // ── Display settings forwarded from SettingsViewModel ─────────────────────
 
     public double MinDb        => _settings.MinDb;
@@ -185,6 +188,7 @@ public partial class MainPageViewModel : ViewModelBase
 
         // Waterfall: linear-domain average of all channels
         MixedFftData = ComputeMix(channelList);
+        MixedFftSampleRate = frames.Count > 0 ? frames[0].SampleRate : 44100;
     }
 
     private static float WrapAngle(float rad)

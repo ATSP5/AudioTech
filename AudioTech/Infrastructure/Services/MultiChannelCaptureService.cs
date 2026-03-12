@@ -259,9 +259,9 @@ public sealed class MultiChannelCaptureService : IAudioCaptureService
                     var pb     = new BufferedWaveProvider(format)
                     {
                         DiscardOnBufferOverflow = true,
-                        BufferDuration          = TimeSpan.FromMilliseconds(200)
+                        BufferDuration          = TimeSpan.FromMilliseconds(80)
                     };
-                    var wo = new WaveOutEvent();
+                    var wo = new WaveOutEvent { DesiredLatency = 80 };
                     wo.Init(pb);
                     wo.Play();
                     _waveOut        = wo;

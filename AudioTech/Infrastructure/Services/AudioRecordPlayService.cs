@@ -34,7 +34,8 @@ public sealed class AudioRecordPlayService : IAudioRecordPlayService
     private BufferedWaveProvider?   _playbackBuffer;
     private CancellationTokenSource? _playCts;
     private volatile bool           _isPlaying;
-    private INoiseFilter            _playbackFilter = new PassthroughFilter();
+    private volatile INoiseFilter   _playbackFilter = new PassthroughFilter();
+    private int                     _playbackSampleRate;
 
     // Pre-computed file duration (available even when not playing)
     private TimeSpan _loadedFileDuration;
@@ -189,17 +190,20 @@ public sealed class AudioRecordPlayService : IAudioRecordPlayService
 
     // ── Playback ──────────────────────────────────────────────────────────────
 
-    public void StartPlayback(FilterType filterType, float filterStrength)
+    public void StartPlayback(FilterType filterType, float filterStrength, EqualizerSettings? equalizerSettings = null)
     {
         if (_isPlaying || _isRecording) return;
         if (_loadedFilePath == null || !File.Exists(_loadedFilePath)) return;
-
-        _playbackFilter = FilterFactory.Create(filterType, filterStrength);
 
         try { _fileReader = new AudioFileReader(_loadedFilePath); }
         catch { return; }
 
         int sampleRate = _fileReader.WaveFormat.SampleRate;
+        _playbackSampleRate = sampleRate;
+
+        // Create filter after file is open so we have the correct sample rate.
+        // Pass equalizerSettings so the EQ filter uses the actual user settings.
+        _playbackFilter = FilterFactory.Create(filterType, filterStrength, sampleRate, equalizerSettings);
         var format     = WaveFormat.CreateIeeeFloatWaveFormat(sampleRate, 1);
 
         _playbackBuffer = new BufferedWaveProvider(format)
@@ -240,6 +244,14 @@ public sealed class AudioRecordPlayService : IAudioRecordPlayService
         _fileReader = null;
 
         StateChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    public void UpdatePlaybackFilter(FilterType filterType, float filterStrength, EqualizerSettings? equalizerSettings = null)
+    {
+        if (!_isPlaying) return;
+        int sr = _playbackSampleRate > 0 ? _playbackSampleRate : 44100;
+        var newFilter = FilterFactory.Create(filterType, filterStrength, sr, equalizerSettings);
+        _playbackFilter = newFilter; // volatile write — visible to playback loop immediately
     }
 
     public void SeekTo(double fraction)
@@ -307,7 +319,7 @@ public sealed class AudioRecordPlayService : IAudioRecordPlayService
                 buf?.AddSamples(outBytes, 0, monoRead * sizeof(float));
 
                 // FFT → spectrum display
-                PlaybackFftReady?.Invoke(this, ComputeFft(monoBuf, sampleRate));
+                PlaybackFftReady?.Invoke(this, ComputeFft(monoBuf, sampleRate, _playbackFilter));
             }
         }
         catch (OperationCanceledException) { /* normal on Stop */ }
@@ -315,7 +327,7 @@ public sealed class AudioRecordPlayService : IAudioRecordPlayService
 
     // ── FFT (same Hanning + magnitude pipeline as MultiChannelCaptureService) ─
 
-    private static FftFrame ComputeFft(float[] samples, int sampleRate)
+    private static FftFrame ComputeFft(float[] samples, int sampleRate, INoiseFilter filter)
     {
         int fftSize   = PlaybackFftSize;
         var fftBuffer = new Complex[fftSize];
@@ -341,6 +353,10 @@ public sealed class AudioRecordPlayService : IAudioRecordPlayService
             magnitudeDb[i]  = mag > 0 ? 20f * MathF.Log10(mag) : -160f;
             phaseRadians[i] = MathF.Atan2(im, re);
         }
+
+        // Spectral filters (noise subtraction) operate on the magnitude spectrum
+        if (filter is ISpectralFilter spectral)
+            spectral.ApplySpectral(magnitudeDb, sampleRate, fftSize);
 
         return new FftFrame(0, "Playback", magnitudeDb, phaseRadians, sampleRate, fftSize);
     }

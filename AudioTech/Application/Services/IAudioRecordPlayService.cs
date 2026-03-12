@@ -26,8 +26,13 @@ public interface IAudioRecordPlayService : IDisposable
     /// <summary>Load a file; pre-reads its duration. Does not start playback.</summary>
     void LoadFile(string filePath);
 
-    void StartPlayback(FilterType filterType, float filterStrength);
+    void StartPlayback(FilterType filterType, float filterStrength, EqualizerSettings? equalizerSettings = null);
     void StopPlayback();
+
+    /// <summary>
+    /// Replaces the active playback filter on-the-fly. No-op if not playing.
+    /// </summary>
+    void UpdatePlaybackFilter(FilterType filterType, float filterStrength, EqualizerSettings? equalizerSettings = null);
 
     /// <summary>Seek to a position expressed as a fraction of total duration [0, 1].</summary>
     void SeekTo(double fraction);

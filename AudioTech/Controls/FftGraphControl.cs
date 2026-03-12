@@ -142,6 +142,47 @@ public class FftGraphControl : Control
             }
         }
 
+        // ── Dominant frequency label ──────────────────────────────────────────────
+        if (channels is not null && channels.Count > 0)
+        {
+            double domFreq = 0;
+            float  domDb   = float.MinValue;
+
+            foreach (var ch in channels)
+            {
+                double binHz = ch.SampleRate / 2.0 / ch.MagnitudeDb.Length;
+                for (int i = 1; i < ch.MagnitudeDb.Length; i++)
+                {
+                    double freq = i * binHz;
+                    if (freq < MinFrequency || freq > MaxFrequency) continue;
+                    if (ch.MagnitudeDb[i] > domDb)
+                    {
+                        domDb   = ch.MagnitudeDb[i];
+                        domFreq = freq;
+                    }
+                }
+            }
+
+            if (domFreq > 0)
+            {
+                // Vertical marker line at dominant frequency
+                double domX = LeftMargin + FreqToX(domFreq, plotW, logMin, logMax);
+                ctx.DrawLine(new Pen(new SolidColorBrush(Color.FromArgb(120, 255, 220, 80)), 1),
+                    new Point(domX, TopMargin),
+                    new Point(domX, TopMargin + plotH));
+
+                // Text label
+                string freqStr = domFreq >= 1000
+                    ? $"▲ {domFreq / 1000:0.00} kHz"
+                    : $"▲ {domFreq:0} Hz";
+                var labelText = MakeLabel(freqStr, 9.5);
+                // Position label just left of the marker (or right if near left edge)
+                double labelX = domX + 4;
+                if (labelX + 70 > LeftMargin + plotW) labelX = domX - 74;
+                ctx.DrawText(labelText, new Point(labelX, TopMargin + 4));
+            }
+        }
+
         // ── Phase difference curve (single, teal, dashed) ────────────────────
         if (hasPhase && phaseDiff is not null)
         {

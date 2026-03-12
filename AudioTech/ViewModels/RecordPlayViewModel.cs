@@ -50,6 +50,7 @@ public partial class RecordPlayViewModel : ViewModelBase
 
         _service.StateChanged     += (_, _) => Dispatcher.UIThread.Post(SyncFromService);
         _service.PlaybackFftReady += (s, e)  => PlaybackFftReady?.Invoke(s, e);
+        _settings.PropertyChanged += OnSettingsPropertyChanged;
 
         _uiTimer = new DispatcherTimer(
             TimeSpan.FromMilliseconds(100),
@@ -165,7 +166,7 @@ public partial class RecordPlayViewModel : ViewModelBase
     [RelayCommand(CanExecute = nameof(CanPlayImpl))]
     private void Play()
     {
-        _service.StartPlayback(_settings.SelectedFilter.Type, _settings.FilterStrengthValue);
+        _service.StartPlayback(_settings.SelectedFilter.Type, _settings.FilterStrengthValue, _settings.Equalizer.Settings);
     }
     private bool CanPlayImpl() => !IsRecording && !IsPlaying && _service.HasLoadedFile;
 
@@ -183,4 +184,11 @@ public partial class RecordPlayViewModel : ViewModelBase
             _service.LoadFile(path);
     }
     private bool CanBrowseImpl() => !IsRecording;
+
+    private void OnSettingsPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (!_service.IsPlaying) return;
+        if (e.PropertyName is nameof(SettingsViewModel.SelectedFilter) or nameof(SettingsViewModel.FilterStrength))
+            _service.UpdatePlaybackFilter(_settings.SelectedFilter.Type, _settings.FilterStrengthValue, _settings.Equalizer.Settings);
+    }
 }

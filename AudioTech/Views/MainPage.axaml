@@ -139,7 +139,10 @@
         FftData="{Binding MixedFftData}"
         MinDb="{Binding MinDb}"
         MaxDb="{Binding MaxDb}"
-        ResetToken="{Binding WaterfallResetToken}"/>
+        ResetToken="{Binding WaterfallResetToken}"
+        MinFrequency="{Binding MinFrequency}"
+        MaxFrequency="{Binding MaxFrequency}"
+        SampleRate="{Binding MixedFftSampleRate}"/>
 
   </Grid>
 </UserControl>
