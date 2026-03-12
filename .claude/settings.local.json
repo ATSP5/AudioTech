@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(cd \"D:\\\\Adam\\\\GitHubWorkspace\\\\AudioAnalyser\" && dotnet build AudioTech/AudioTech.csproj 2>&1 | tail -40)",
-      "Bash(cd \"D:\\\\Adam\\\\GitHubWorkspace\\\\AudioAnalyser\" && dotnet build AudioTech/AudioTech.csproj 2>&1 | tail -20)"
+      "Bash(cd \"D:\\\\Adam\\\\GitHubWorkspace\\\\AudioAnalyser\" && dotnet build AudioTech/AudioTech.csproj 2>&1 | tail -20)",
+      "Bash(cd \"D:/Adam/GitHubWorkspace/AudioAnalyser\" && powershell -Command \"& { Add-Type -AssemblyName System.Reflection; $asm = [System.Reflection.Assembly]::LoadFrom\\(\\(Resolve-Path 'AudioTech\\\\\\\\bin\\\\\\\\Debug\\\\\\\\net8.0\\\\\\\\NAudio.Wasapi.dll'\\).Path\\); $t = $asm.GetType\\('NAudio.Wave.WasapiOut'\\); $t.GetConstructors\\(\\) | % { $_.ToString\\(\\) } }\" 2>&1)"
     ]
   }
 }

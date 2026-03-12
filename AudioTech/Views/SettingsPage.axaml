@@ -30,8 +30,8 @@
                       Padding="12,10" Margin="0,3">
                 <StackPanel Spacing="8">
 
-                  <!-- Device row -->
-                  <Grid ColumnDefinitions="Auto,Auto,*,Auto">
+                  <!-- Device row: swatch | enable | device-selector | monitor | label -->
+                  <Grid ColumnDefinitions="Auto,Auto,*,Auto,Auto">
 
                     <!-- Color swatch -->
                     <Border Grid.Column="0"
@@ -58,12 +58,33 @@
                               Background="#1A1A2A" BorderBrush="#333"
                               PlaceholderText="No device selected"/>
 
+                    <!-- Monitor (passthrough) toggle -->
+                    <ToggleButton Grid.Column="3"
+                                  IsChecked="{Binding IsPassthrough}"
+                                  IsEnabled="{Binding IsEnabled}"
+                                  Content="🔊"
+                                  Width="32" Height="28"
+                                  Margin="6,0,0,0"
+                                  Background="Transparent"
+                                  BorderThickness="1" BorderBrush="#333"
+                                  FontSize="13" Padding="0"
+                                  VerticalAlignment="Center"
+                                  ToolTip.Tip="Monitor: route this mic to speakers">
+                      <ToggleButton.Styles>
+                        <Style Selector="ToggleButton:checked">
+                          <Setter Property="Background" Value="#1A2A1A"/>
+                          <Setter Property="BorderBrush" Value="#4CAF50"/>
+                          <Setter Property="Foreground" Value="#4CAF50"/>
+                        </Style>
+                      </ToggleButton.Styles>
+                    </ToggleButton>
+
                     <!-- Channel label -->
-                    <TextBlock Grid.Column="3"
+                    <TextBlock Grid.Column="4"
                                Text="{Binding Label}"
                                Foreground="#666" FontSize="10"
                                VerticalAlignment="Center"
-                               Margin="10,0,0,0"/>
+                               Margin="8,0,0,0"/>
 
                   </Grid>
 

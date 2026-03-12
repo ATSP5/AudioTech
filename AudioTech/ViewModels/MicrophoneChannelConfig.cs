@@ -18,6 +18,9 @@ public partial class MicrophoneChannelConfig : ObservableObject
     private bool _isEnabled;
 
     [ObservableProperty]
+    private bool _isPassthrough;
+
+    [ObservableProperty]
     private int _selectedDeviceIndex;
 
     [ObservableProperty]

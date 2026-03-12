@@ -47,10 +47,16 @@ public interface IAudioCaptureService : IDisposable
     void SetChannelGain(int channelIndex, float gainDb);
 
     /// <summary>
-    /// Route filtered audio from channel 0 to the default speaker output.
+    /// Master on/off for all passthrough output.
     /// Safe to call while capture is running or stopped.
     /// </summary>
     void SetPassthrough(bool enabled);
+
+    /// <summary>
+    /// Enable or disable passthrough for a specific channel.
+    /// Takes effect immediately if capture is running.
+    /// </summary>
+    void SetChannelPassthrough(int channelIndex, bool enabled);
 
     bool IsAnyRunning { get; }
     IReadOnlyList<int> ActiveChannels { get; }

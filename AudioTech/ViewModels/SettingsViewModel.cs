@@ -106,6 +106,8 @@ public partial class SettingsViewModel : ViewModelBase
             {
                 if (e.PropertyName == nameof(MicrophoneChannelConfig.GainDb))
                     _captureService.SetChannelGain(ch.ChannelIndex, (float)ch.GainDb);
+                else if (e.PropertyName == nameof(MicrophoneChannelConfig.IsPassthrough))
+                    _captureService.SetChannelPassthrough(ch.ChannelIndex, ch.IsPassthrough);
             };
 
         RefreshDevicesCommand.Execute(null);
