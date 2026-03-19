@@ -194,7 +194,7 @@ public sealed class MultiChannelCaptureService : IAudioCaptureService
             WaveIn        = waveIn,
             Filter        = FilterFactory.Create(_filterType, _filterStrength, sampleRate, _equalizerSettings, channelIndex),
             GainLinear    = _channelGains.TryGetValue(channelIndex, out var g) ? g : 1f,
-            IsPassthrough = _channelPassthroughs.TryGetValue(channelIndex, out var pt) && pt
+            IsPassthrough = !_channelPassthroughs.TryGetValue(channelIndex, out var pt) || pt
         };
 
         waveIn.DataAvailable += (_, e) => EnqueueSamples(state, e);

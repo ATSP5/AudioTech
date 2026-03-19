@@ -1,11 +1,15 @@
 using System.Collections.Concurrent;
+using System.Text;
 
 using AudioTech.Application.Services;
 
+using Avalonia.Media.Imaging;
 using Avalonia.Threading;
 
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+
+using SkiaSharp;
 
 namespace AudioTech.ViewModels;
 
@@ -13,6 +17,7 @@ public partial class MainPageViewModel : ViewModelBase
 {
     private readonly IAudioCaptureService _captureService;
     private readonly SettingsViewModel    _settings;
+    private readonly IDialogService       _dialog;
 
     // Latest frame per channel — written from ThreadPool, read from UI thread
     private readonly ConcurrentDictionary<int, FftFrame> _latestFrames = new();
@@ -73,16 +78,28 @@ public partial class MainPageViewModel : ViewModelBase
 
     // ── ctor ──────────────────────────────────────────────────────────────────
 
+    // ── Export delegates — set by MainPage code-behind ─────────────────────────
+
+    /// <summary>Renders the FFT graph to a bitmap. Registered by MainPage.</summary>
+    public Func<RenderTargetBitmap?>? GetFftBitmap { get; set; }
+
+    /// <summary>Returns the current waterfall bitmap. Registered by MainPage.</summary>
+    public Func<WriteableBitmap?>? GetWaterfallBitmap { get; set; }
+
+    // ─────────────────────────────────────────────────────────────────────────
+
     public RecordPlayViewModel RecordPlay { get; }
 
     public MainPageViewModel(
         IAudioCaptureService captureService,
         SettingsViewModel    settings,
-        RecordPlayViewModel  recordPlay)
+        RecordPlayViewModel  recordPlay,
+        IDialogService       dialog)
     {
         _captureService = captureService;
         _settings       = settings;
         RecordPlay      = recordPlay;
+        _dialog         = dialog;
 
         _captureService.FftFrameReady += OnFftFrameReady;
         RecordPlay.PlaybackFftReady   += OnFftFrameReady; // playback uses channel 0
@@ -276,4 +293,160 @@ public partial class MainPageViewModel : ViewModelBase
     }
 
     private bool CanToggleCaptureImpl() => !RecordPlay.IsPlaying;
+
+    // ── Export commands ────────────────────────────────────────────────────────
+
+    private static readonly (string Name, string[] Patterns)[] ImageFileTypes =
+    [
+        ("PNG Image",    ["png"]),
+        ("JPEG Image",   ["jpg", "jpeg"]),
+        ("Bitmap Image", ["bmp"])
+    ];
+
+    private static readonly (string Name, string[] Patterns)[] CsvFileTypes =
+    [
+        ("CSV File", ["csv"])
+    ];
+
+    [RelayCommand]
+    private async Task ExportAsync(string target)
+    {
+        switch (target)
+        {
+            case "upper-csv":   await ExportUpperCsvAsync();   break;
+            case "upper-image": await ExportUpperImageAsync(); break;
+            case "lower-csv":   await ExportLowerCsvAsync();   break;
+            case "lower-image": await ExportLowerImageAsync(); break;
+            case "both-image":  await ExportBothImagesAsync(); break;
+        }
+    }
+
+    private async Task ExportUpperCsvAsync()
+    {
+        var channels = Channels;
+        if (channels.Count == 0) return;
+
+        var path = await _dialog.ShowSaveFilePickerAsync("fft_spectrum", CsvFileTypes);
+        if (path is null) return;
+
+        var sb = new StringBuilder();
+
+        // Header
+        sb.Append("Frequency (Hz)");
+        foreach (var ch in channels)
+            sb.Append($",{ch.Label} (dB)");
+        var phase = PhaseDifferenceData;
+        if (phase is not null)
+            sb.Append(",Phase Diff (rad)");
+        sb.AppendLine();
+
+        // Data rows
+        int bins = channels[0].MagnitudeDb.Length;
+        double binHz = channels[0].SampleRate / 2.0 / bins;
+        for (int i = 1; i < bins; i++)
+        {
+            double freq = i * binHz;
+            if (freq < MinFrequency || freq > MaxFrequency) continue;
+
+            sb.Append($"{freq:F2}");
+            foreach (var ch in channels)
+                sb.Append($",{ch.MagnitudeDb[i]:F4}");
+            if (phase is not null && i < phase.Length)
+                sb.Append($",{phase[i]:F6}");
+            sb.AppendLine();
+        }
+
+        await File.WriteAllTextAsync(path, sb.ToString());
+    }
+
+    private async Task ExportLowerCsvAsync()
+    {
+        var data = MixedFftData;
+        if (data is null || data.Length == 0) return;
+
+        var path = await _dialog.ShowSaveFilePickerAsync("waterfall_spectrum", CsvFileTypes);
+        if (path is null) return;
+
+        var sb = new StringBuilder();
+        sb.AppendLine("Frequency (Hz),Magnitude (dB)");
+
+        int bins = data.Length;
+        double binHz = MixedFftSampleRate / 2.0 / bins;
+        for (int i = 1; i < bins; i++)
+        {
+            double freq = i * binHz;
+            if (freq < MinFrequency || freq > MaxFrequency) continue;
+            sb.AppendLine($"{freq:F2},{data[i]:F4}");
+        }
+
+        await File.WriteAllTextAsync(path, sb.ToString());
+    }
+
+    private async Task ExportUpperImageAsync()
+    {
+        var bitmap = GetFftBitmap?.Invoke();
+        if (bitmap is null) return;
+
+        var path = await _dialog.ShowSaveFilePickerAsync("fft_graph", ImageFileTypes);
+        if (path is null) return;
+
+        await SaveBitmapAsync(bitmap, path);
+    }
+
+    private async Task ExportLowerImageAsync()
+    {
+        var bitmap = GetWaterfallBitmap?.Invoke();
+        if (bitmap is null) return;
+
+        var path = await _dialog.ShowSaveFilePickerAsync("waterfall", ImageFileTypes);
+        if (path is null) return;
+
+        await SaveBitmapAsync(bitmap, path);
+    }
+
+    private async Task ExportBothImagesAsync()
+    {
+        var fftBitmap = GetFftBitmap?.Invoke();
+        if (fftBitmap is not null)
+        {
+            var path = await _dialog.ShowSaveFilePickerAsync("fft_graph", ImageFileTypes);
+            if (path is not null)
+                await SaveBitmapAsync(fftBitmap, path);
+        }
+
+        var watBitmap = GetWaterfallBitmap?.Invoke();
+        if (watBitmap is not null)
+        {
+            var path = await _dialog.ShowSaveFilePickerAsync("waterfall", ImageFileTypes);
+            if (path is not null)
+                await SaveBitmapAsync(watBitmap, path);
+        }
+    }
+
+    private static async Task SaveBitmapAsync(Bitmap bitmap, string path)
+    {
+        var ext = Path.GetExtension(path).ToLowerInvariant();
+
+        if (ext == ".png")
+        {
+            bitmap.Save(path);
+            return;
+        }
+
+        // For JPEG and BMP, round-trip through SkiaSharp
+        using var ms = new MemoryStream();
+        bitmap.Save(ms);
+        ms.Position = 0;
+
+        using var skBitmap = SKBitmap.Decode(ms);
+        var format = ext switch
+        {
+            ".jpg" or ".jpeg" => SKEncodedImageFormat.Jpeg,
+            ".bmp"            => SKEncodedImageFormat.Bmp,
+            _                 => SKEncodedImageFormat.Png
+        };
+
+        using var encoded = skBitmap.Encode(format, 90);
+        await File.WriteAllBytesAsync(path, encoded.ToArray());
+    }
 }

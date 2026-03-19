@@ -9,7 +9,7 @@
   <Grid RowDefinitions="36,Auto,*,*">
 
     <!-- ── Toolbar ─────────────────────────────────────── -->
-    <Grid Grid.Row="0" ColumnDefinitions="*,Auto,Auto" Background="#0B0B16">
+    <Grid Grid.Row="0" ColumnDefinitions="*,Auto,Auto,Auto" Background="#0B0B16">
       <TextBlock Grid.Column="0" Text="{Binding StatusText}"
                  Foreground="#777" FontSize="11"
                  VerticalAlignment="Center" Margin="12,0"/>
@@ -33,6 +33,39 @@
         </ToggleButton.Styles>
       </ToggleButton>
       <Button Grid.Column="2"
+              Content="⤓ Export"
+              Background="Transparent" Foreground="#CCC"
+              BorderThickness="1" BorderBrush="#333"
+              Padding="12,0" Height="26"
+              Margin="0,0,8,0"
+              FontSize="12"
+              VerticalAlignment="Center">
+        <Button.Flyout>
+          <MenuFlyout x:CompileBindings="False">
+            <MenuItem Header="Upper Graph (FFT)">
+              <MenuItem Header="As CSV…"
+                        Command="{Binding ExportCommand}"
+                        CommandParameter="upper-csv"/>
+              <MenuItem Header="As Image…"
+                        Command="{Binding ExportCommand}"
+                        CommandParameter="upper-image"/>
+            </MenuItem>
+            <MenuItem Header="Lower Graph (Waterfall)">
+              <MenuItem Header="As CSV…"
+                        Command="{Binding ExportCommand}"
+                        CommandParameter="lower-csv"/>
+              <MenuItem Header="As Image…"
+                        Command="{Binding ExportCommand}"
+                        CommandParameter="lower-image"/>
+            </MenuItem>
+            <Separator/>
+            <MenuItem Header="Both Graphs as Images…"
+                      Command="{Binding ExportCommand}"
+                      CommandParameter="both-image"/>
+          </MenuFlyout>
+        </Button.Flyout>
+      </Button>
+      <Button Grid.Column="3"
               Command="{Binding ToggleCaptureCommand}"
               Content="{Binding ToggleButtonText}"
               Background="Transparent" Foreground="#CCC"
@@ -124,6 +157,7 @@
 
     <!-- ── FFT Graph (multi-channel + phase diff + legend) ─ -->
     <controls:FftGraphControl
+        x:Name="FftGraph"
         Grid.Row="2"
         Channels="{Binding Channels}"
         PhaseDifference="{Binding PhaseDifferenceData}"
@@ -135,6 +169,7 @@
 
     <!-- ── Waterfall (mixed signal) ────────────────────── -->
     <controls:WaterfallControl
+        x:Name="WaterfallGraph"
         Grid.Row="3"
         FftData="{Binding MixedFftData}"
         MinDb="{Binding MinDb}"

@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
+using Avalonia.Media.Imaging;
 
 using AudioTech.ViewModels;
 
@@ -305,4 +306,18 @@ public class FftGraphControl : Control
             System.Globalization.CultureInfo.InvariantCulture,
             FlowDirection.LeftToRight,
             SmallFont, size, LabelBrush);
+
+    // ── Export ────────────────────────────────────────────────────────────────
+
+    /// <summary>Renders the graph at its current on-screen size into a bitmap.</summary>
+    public RenderTargetBitmap? RenderToBitmap()
+    {
+        int w = (int)Math.Ceiling(Bounds.Width);
+        int h = (int)Math.Ceiling(Bounds.Height);
+        if (w < 1 || h < 1) return null;
+
+        var bmp = new RenderTargetBitmap(new PixelSize(w, h), new Vector(96, 96));
+        bmp.Render(this);
+        return bmp;
+    }
 }

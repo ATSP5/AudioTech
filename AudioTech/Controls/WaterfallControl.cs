@@ -146,4 +146,9 @@ public class WaterfallControl : Control
         if (_bitmap is null) return;
         ctx.DrawImage(_bitmap, new Rect(0, 0, BitmapWidth, BitmapHeight), new Rect(Bounds.Size));
     }
+
+    // ── Export ────────────────────────────────────────────────────────────────
+
+    /// <summary>Returns the current waterfall bitmap for export.</summary>
+    public WriteableBitmap? GetBitmap() => _bitmap;
 }
