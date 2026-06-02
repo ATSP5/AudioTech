@@ -1,6 +1,7 @@
 using AudioTech.Application.Abstractions;
 using AudioTech.Application.Commands.AnalyseAudio;
 using AudioTech.Application.Commands.LoadAudioFile;
+using AudioTech.Application.Queries.ComputeSoundDistribution;
 using AudioTech.Application.Queries.GetAudioAnalysis;
 using AudioTech.Application.Queries.GetAudioFiles;
 using AudioTech.Application.Services;
@@ -26,6 +27,7 @@ public static class DependencyInjection
 
         // Infrastructure services
         services.AddSingleton<IAudioAnalysisService, AudioAnalysisService>();
+        services.AddSingleton<IAcousticSimulationService, AcousticSimulationService>();
         services.AddSingleton<IAudioCaptureService, MultiChannelCaptureService>();
         services.AddSingleton<IAudioRecordPlayService, AudioRecordPlayService>();
         services.AddSingleton<IDialogService, AvaloniaDialogService>();
@@ -37,6 +39,8 @@ public static class DependencyInjection
         // Query handlers
         services.AddTransient<IQueryHandler<GetAudioAnalysisQuery, AudioAnalysisResult?>, GetAudioAnalysisQueryHandler>();
         services.AddTransient<IQueryHandler<GetAudioFilesQuery, IReadOnlyList<AudioFileListItem>>, GetAudioFilesQueryHandler>();
+        services.AddTransient<IQueryHandler<ComputeSoundDistributionQuery, ComputeSoundDistributionResult>,
+                              ComputeSoundDistributionQueryHandler>();
 
         return services;
     }

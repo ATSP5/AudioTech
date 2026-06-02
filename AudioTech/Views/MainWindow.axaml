@@ -6,8 +6,8 @@
         x:DataType="vm:MainViewModel"
         Icon="/Assets/avalonia-logo.ico"
         Title="AudioTech"
-        Width="520" Height="820"
-        MinWidth="380" MinHeight="500"
+        Width="1140" Height="820"
+        MinWidth="800" MinHeight="600"
         Background="#08080C"
         ExtendClientAreaToDecorationsHint="False">
 
@@ -17,6 +17,9 @@
     </DataTemplate>
     <DataTemplate DataType="vm:SettingsViewModel">
       <views:SettingsPage />
+    </DataTemplate>
+    <DataTemplate DataType="vm:RoomAcousticsViewModel">
+      <views:RoomAcousticsPage />
     </DataTemplate>
   </Window.DataTemplates>
 
@@ -55,6 +58,21 @@
                         HorizontalAlignment="Center"
                         Data="M3,12 L12,4 L21,12 V20 H15 V14 H9 V20 H3 Z"/>
               <TextBlock Grid.Column="1" Text="Main"
+                         Foreground="#CCC" FontSize="13"
+                         VerticalAlignment="Center"/>
+            </Grid>
+          </Button>
+
+          <!-- Room Acoustics -->
+          <Button Command="{Binding NavigateToRoomAcousticsCommand}"
+                  Height="48" Background="Transparent" BorderThickness="0"
+                  HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                  Padding="0" ToolTip.Tip="Room Acoustics">
+            <Grid ColumnDefinitions="48,*">
+              <PathIcon Grid.Column="0" Width="18" Height="18" Foreground="#CCC"
+                        HorizontalAlignment="Center"
+                        Data="M2,20 H22 M2,20 L2,6 H22 V20 M8,20 V14 H16 V20 M12,6 L12,2 M9,2 H15"/>
+              <TextBlock Grid.Column="1" Text="Room"
                          Foreground="#CCC" FontSize="13"
                          VerticalAlignment="Center"/>
             </Grid>

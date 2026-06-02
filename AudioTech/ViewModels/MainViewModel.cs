@@ -5,8 +5,9 @@ namespace AudioTech.ViewModels;
 
 public partial class MainViewModel : ViewModelBase
 {
-    public MainPageViewModel MainPage { get; }
-    public SettingsViewModel Settings { get; }
+    public MainPageViewModel       MainPage      { get; }
+    public SettingsViewModel       Settings      { get; }
+    public RoomAcousticsViewModel  RoomAcoustics { get; }
 
     [ObservableProperty]
     private ViewModelBase _currentPage;
@@ -14,25 +15,36 @@ public partial class MainViewModel : ViewModelBase
     [ObservableProperty]
     private bool _isPaneOpen;
 
-    public MainViewModel(MainPageViewModel mainPage, SettingsViewModel settings)
+    public MainViewModel(
+        MainPageViewModel      mainPage,
+        SettingsViewModel      settings,
+        RoomAcousticsViewModel roomAcoustics)
     {
-        MainPage = mainPage;
-        Settings = settings;
-        _currentPage = mainPage;
+        MainPage      = mainPage;
+        Settings      = settings;
+        RoomAcoustics = roomAcoustics;
+        _currentPage  = mainPage;
     }
 
     [RelayCommand]
     private void NavigateToMain()
     {
         CurrentPage = MainPage;
-        IsPaneOpen = false;
+        IsPaneOpen  = false;
     }
 
     [RelayCommand]
     private void NavigateToSettings()
     {
         CurrentPage = Settings;
-        IsPaneOpen = false;
+        IsPaneOpen  = false;
+    }
+
+    [RelayCommand]
+    private void NavigateToRoomAcoustics()
+    {
+        CurrentPage = RoomAcoustics;
+        IsPaneOpen  = false;
     }
 
     [RelayCommand]

@@ -4,7 +4,12 @@
       "Bash(cd \"D:\\\\Adam\\\\GitHubWorkspace\\\\AudioAnalyser\\\\AudioTech\" && dotnet build 2>&1)",
       "Bash(cd \"D:\\\\Adam\\\\GitHubWorkspace\\\\AudioAnalyser\\\\AudioTech\" && dotnet build AudioTech.csproj 2>&1)",
       "Bash(cd \"D:\\\\Adam\\\\GitHubWorkspace\\\\AudioAnalyser\\\\AudioTech\" && dotnet build AudioTech.csproj 2>&1 | tail -5)",
-      "Bash(cd \"D:\\\\Adam\\\\GitHubWorkspace\\\\AudioAnalyser\\\\AudioTech\" && dotnet build AudioTech.csproj 2>&1 | tail -4)"
+      "Bash(cd \"D:\\\\Adam\\\\GitHubWorkspace\\\\AudioAnalyser\\\\AudioTech\" && dotnet build AudioTech.csproj 2>&1 | tail -4)",
+      "Bash(Get-ChildItem -Path \"D:\\\\Adam\\\\GitHubWorkspace\\\\AudioAnalyser\\\\AudioTech\" -Recurse -File)",
+      "Bash(Select-Object -ExpandProperty FullName)",
+      "Bash(Sort-Object)",
+      "Read(//d/Adam/GitHubWorkspace/AudioAnalyser/**)",
+      "Bash(dotnet build *)"
     ]
   }
 }

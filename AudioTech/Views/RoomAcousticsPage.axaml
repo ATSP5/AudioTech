@@ -1,0 +1,326 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:AudioTech.ViewModels"
+             xmlns:controls="using:AudioTech.Controls"
+             x:Class="AudioTech.Views.RoomAcousticsPage"
+             x:DataType="vm:RoomAcousticsViewModel"
+             Background="#141C28">
+
+  <UserControl.Styles>
+
+    <!-- Tool button — default -->
+    <Style Selector="Button.tool">
+      <Setter Property="Width"                 Value="40"/>
+      <Setter Property="Height"                Value="34"/>
+      <Setter Property="Background"            Value="#1E2840"/>
+      <Setter Property="BorderBrush"           Value="#3A4A60"/>
+      <Setter Property="BorderThickness"       Value="1"/>
+      <Setter Property="Padding"               Value="0"/>
+      <Setter Property="HorizontalContentAlignment" Value="Center"/>
+      <Setter Property="VerticalContentAlignment"   Value="Center"/>
+      <Setter Property="CornerRadius"          Value="4"/>
+    </Style>
+
+    <!-- Tool button — active -->
+    <Style Selector="Button.tool.active">
+      <Setter Property="Background"  Value="#244878"/>
+      <Setter Property="BorderBrush" Value="#60A8FF"/>
+    </Style>
+
+    <!-- Toolbar separator -->
+    <Style Selector="Border.sep">
+      <Setter Property="Width"           Value="1"/>
+      <Setter Property="Background"      Value="#3A5070"/>
+      <Setter Property="Margin"          Value="4,6"/>
+    </Style>
+
+    <!-- Panel label -->
+    <Style Selector="TextBlock.panel-label">
+      <Setter Property="FontSize"   Value="10"/>
+      <Setter Property="Foreground" Value="#7898B8"/>
+      <Setter Property="Margin"     Value="0,6,0,2"/>
+    </Style>
+
+    <!-- Section heading -->
+    <Style Selector="TextBlock.section">
+      <Setter Property="FontSize"   Value="11"/>
+      <Setter Property="Foreground" Value="#A0B8D0"/>
+      <Setter Property="Margin"     Value="0,10,0,4"/>
+      <Setter Property="FontWeight" Value="SemiBold"/>
+    </Style>
+
+    <!-- Slider track style -->
+    <Style Selector="Slider">
+      <Setter Property="Foreground" Value="#4A90D9"/>
+    </Style>
+
+    <!-- Primary action button -->
+    <Style Selector="Button.primary">
+      <Setter Property="Background"      Value="#1C3A60"/>
+      <Setter Property="BorderBrush"     Value="#4A90D9"/>
+      <Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="Foreground"      Value="#90C8FF"/>
+      <Setter Property="Padding"         Value="12,6"/>
+      <Setter Property="CornerRadius"    Value="4"/>
+    </Style>
+    <Style Selector="Button.primary:disabled">
+      <Setter Property="Background"  Value="#111820"/>
+      <Setter Property="BorderBrush" Value="#2A3040"/>
+      <Setter Property="Foreground"  Value="#3A4A5A"/>
+    </Style>
+
+    <!-- Danger button -->
+    <Style Selector="Button.danger">
+      <Setter Property="Background"      Value="#2A1010"/>
+      <Setter Property="BorderBrush"     Value="#804040"/>
+      <Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="Foreground"      Value="#CC7070"/>
+      <Setter Property="Padding"         Value="8,4"/>
+      <Setter Property="CornerRadius"    Value="4"/>
+    </Style>
+
+    <!-- Small secondary button -->
+    <Style Selector="Button.sm">
+      <Setter Property="Background"      Value="#14181E"/>
+      <Setter Property="BorderBrush"     Value="#2A3040"/>
+      <Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="Foreground"      Value="#8090A0"/>
+      <Setter Property="Padding"         Value="6,3"/>
+      <Setter Property="FontSize"        Value="11"/>
+      <Setter Property="CornerRadius"    Value="3"/>
+    </Style>
+
+    <Style Selector="ComboBox">
+      <Setter Property="Background"  Value="#14181E"/>
+      <Setter Property="Foreground"  Value="#A0B0C0"/>
+      <Setter Property="BorderBrush" Value="#2A3040"/>
+    </Style>
+
+  </UserControl.Styles>
+
+  <Grid RowDefinitions="42,*,28">
+
+    <!-- ── Toolbar ─────────────────────────────────────────────────────────── -->
+    <Border Grid.Row="0"
+            Background="#1A2438"
+            BorderThickness="0,0,0,1"
+            BorderBrush="#2E4060">
+      <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="8,0">
+
+        <!-- Select -->
+        <Button Classes="tool"
+                Classes.active="{Binding IsSelectTool}"
+                Command="{Binding SelectToolCommand}"
+                CommandParameter="Select"
+                ToolTip.Tip="Select / Move (S)">
+          <PathIcon Width="16" Height="16" Foreground="#AAB8C8"
+                    Data="M4,2 L4,18 L8,13 L12,22 L14,21 L10,12 L16,12 Z"/>
+        </Button>
+
+        <Border Classes="sep"/>
+
+        <!-- Draw Room -->
+        <Button Classes="tool"
+                Classes.active="{Binding IsDrawRoomTool}"
+                Command="{Binding SelectToolCommand}"
+                CommandParameter="DrawRoom"
+                ToolTip.Tip="Draw Room Boundary (R)">
+          <PathIcon Width="16" Height="16" Foreground="#4A90D9"
+                    Data="M12,3 L20,9 L17,19 H7 L4,9 Z"/>
+        </Button>
+
+        <!-- Draw Obstacle -->
+        <Button Classes="tool"
+                Classes.active="{Binding IsDrawObstacleTool}"
+                Command="{Binding SelectToolCommand}"
+                CommandParameter="DrawObstacle"
+                ToolTip.Tip="Draw Obstacle (O)">
+          <PathIcon Width="16" Height="16" Foreground="#CC8820"
+                    Data="M3,5 H21 V19 H3 Z"/>
+        </Button>
+
+        <!-- Place Microphone -->
+        <Button Classes="tool"
+                Classes.active="{Binding IsPlaceMicrophoneTool}"
+                Command="{Binding SelectToolCommand}"
+                CommandParameter="PlaceMicrophone"
+                ToolTip.Tip="Place Microphone (M)">
+          <PathIcon Width="16" Height="16" Foreground="#44DD77"
+                    Data="M12,2 A3,3 0 0 1 15,5 V11 A3,3 0 0 1 9,11 V5 A3,3 0 0 1 12,2 M7,11 C7,14.3 17,14.3 17,11 M12,14 V18 M9,18 H15"/>
+        </Button>
+
+        <!-- Place Stage -->
+        <Button Classes="tool"
+                Classes.active="{Binding IsPlaceStageTool}"
+                Command="{Binding SelectToolCommand}"
+                CommandParameter="PlaceStage"
+                ToolTip.Tip="Place Sound Source / Stage (T)">
+          <PathIcon Width="16" Height="16" Foreground="#FF6060"
+                    Data="M12,3 L22,20 H2 Z"/>
+        </Button>
+
+        <Border Classes="sep"/>
+
+        <!-- Finish / close polygon -->
+        <Button Classes="tool"
+                Command="{Binding FinishDrawingCommand}"
+                ToolTip.Tip="Close Polygon (Enter)">
+          <PathIcon Width="16" Height="16" Foreground="#90C0FF"
+                    Data="M4,12 L9,17 L20,6"/>
+        </Button>
+
+        <Border Classes="sep"/>
+
+        <!-- Reset View -->
+        <Button Classes="tool"
+                Command="{Binding ResetViewCommand}"
+                ToolTip.Tip="Reset View (Home)">
+          <PathIcon Width="14" Height="14" Foreground="#8090A0"
+                    Data="M12,3 A9,9 0 0 1 21,12 A9,9 0 0 1 12,21 A9,9 0 0 1 3,12 A9,9 0 0 1 12,3 M12,7 V12 L15,15"/>
+        </Button>
+
+      </StackPanel>
+    </Border>
+
+    <!-- ── Main area ────────────────────────────────────────────────────────── -->
+    <Grid Grid.Row="1" ColumnDefinitions="*,180">
+
+      <!-- Canvas — ViewModel is resolved from inherited DataContext -->
+      <controls:RoomCanvasControl Grid.Column="0"
+                                  DataContext="{Binding .}"
+                                  Cursor="Cross"/>
+
+      <!-- Properties panel -->
+      <Border Grid.Column="1"
+              Background="#111C2E"
+              BorderThickness="1,0,0,0"
+              BorderBrush="#2E4060">
+
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+          <StackPanel Margin="10,8" Spacing="2">
+
+            <!-- ── Room walls ───────────────────────────── -->
+            <TextBlock Classes="section" Text="ROOM WALLS"/>
+
+            <TextBlock Classes="panel-label" Text="Surface"/>
+            <ComboBox ItemsSource="{x:Static vm:RoomAcousticsViewModel.SurfaceNames}"
+                      SelectedIndex="{Binding WallSurfaceIndex}"
+                      HorizontalAlignment="Stretch"/>
+
+            <TextBlock Classes="panel-label" Text="Irregularity"/>
+            <Grid ColumnDefinitions="*,30">
+              <Slider Grid.Column="0"
+                      Minimum="0" Maximum="1"
+                      Value="{Binding WallIrregularity}"
+                      TickFrequency="0.1"/>
+              <TextBlock Grid.Column="1"
+                         Text="{Binding WallIrregularity, StringFormat={}{0:F2}}"
+                         Foreground="#607080" FontSize="10"
+                         VerticalAlignment="Center" Margin="4,0,0,0"/>
+            </Grid>
+
+            <!-- ── Obstacles ────────────────────────────── -->
+            <TextBlock Classes="section" Text="NEW OBSTACLE"/>
+
+            <TextBlock Classes="panel-label" Text="Surface"/>
+            <ComboBox ItemsSource="{x:Static vm:RoomAcousticsViewModel.SurfaceNames}"
+                      SelectedIndex="{Binding ObstacleSurfaceIndex}"
+                      HorizontalAlignment="Stretch"/>
+
+            <TextBlock Classes="panel-label" Text="Irregularity"/>
+            <Grid ColumnDefinitions="*,30">
+              <Slider Grid.Column="0"
+                      Minimum="0" Maximum="1"
+                      Value="{Binding ObstacleIrregularity}"
+                      TickFrequency="0.1"/>
+              <TextBlock Grid.Column="1"
+                         Text="{Binding ObstacleIrregularity, StringFormat={}{0:F2}}"
+                         Foreground="#607080" FontSize="10"
+                         VerticalAlignment="Center" Margin="4,0,0,0"/>
+            </Grid>
+
+            <!-- ── Sound Source ─────────────────────────── -->
+            <TextBlock Classes="section" Text="SOUND SOURCE"/>
+
+            <TextBlock Classes="panel-label" Text="Source Level (dB SPL @ 1 m)"/>
+            <Grid ColumnDefinitions="*,36">
+              <Slider Grid.Column="0"
+                      Minimum="60" Maximum="140"
+                      Value="{Binding SourceLevelDb}"
+                      TickFrequency="1"/>
+              <TextBlock Grid.Column="1"
+                         Text="{Binding SourceLevelDb, StringFormat={}{0:F0}}"
+                         Foreground="#607080" FontSize="10"
+                         VerticalAlignment="Center" Margin="4,0,0,0"/>
+            </Grid>
+
+            <!-- ── Simulation ────────────────────────────── -->
+            <TextBlock Classes="section" Text="SIMULATION"/>
+
+            <TextBlock Classes="panel-label" Text="Grid Resolution"/>
+            <Grid ColumnDefinitions="*,30">
+              <Slider Grid.Column="0"
+                      Minimum="40" Maximum="160"
+                      Value="{Binding GridResolution}"
+                      TickFrequency="10"/>
+              <TextBlock Grid.Column="1"
+                         Text="{Binding GridResolution}"
+                         Foreground="#607080" FontSize="10"
+                         VerticalAlignment="Center" Margin="4,0,0,0"/>
+            </Grid>
+
+            <Button Classes="primary"
+                    Command="{Binding ComputeHeatmapCommand}"
+                    HorizontalAlignment="Stretch"
+                    HorizontalContentAlignment="Center"
+                    Margin="0,8,0,0"
+                    IsEnabled="{Binding !IsComputing}">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <PathIcon Width="14" Height="14"
+                          Data="M8,5 L8,19 L19,12 Z"/>
+                <TextBlock IsVisible="{Binding !IsComputing}" Text="Process"/>
+                <TextBlock IsVisible="{Binding IsComputing}"  Text="Computing…"/>
+              </StackPanel>
+            </Button>
+
+            <!-- ── Clear actions ─────────────────────────── -->
+            <TextBlock Classes="section" Text="CLEAR"/>
+
+            <WrapPanel Orientation="Horizontal">
+              <Button Classes="sm" Command="{Binding ClearRoomCommand}" Margin="0,2,4,2" Content="Room"/>
+              <Button Classes="sm" Command="{Binding ClearObstaclesCommand}" Margin="0,2,4,2" Content="Obstacles"/>
+              <Button Classes="sm" Command="{Binding ClearMicrophonesCommand}" Margin="0,2,4,2" Content="Mics"/>
+            </WrapPanel>
+            <Button Classes="danger"
+                    Command="{Binding ClearAllCommand}"
+                    HorizontalAlignment="Stretch"
+                    HorizontalContentAlignment="Center"
+                    Margin="0,4,0,0"
+                    Content="Clear All"/>
+
+          </StackPanel>
+        </ScrollViewer>
+      </Border>
+
+    </Grid>
+
+    <!-- ── Status bar ────────────────────────────────────────────────────────── -->
+    <Border Grid.Row="2"
+            Background="#111C2E"
+            BorderThickness="0,1,0,0"
+            BorderBrush="#2E4060">
+      <Grid ColumnDefinitions="*,Auto" Margin="8,0">
+        <TextBlock Grid.Column="0"
+                   Text="{Binding StatusText}"
+                   Foreground="#607080" FontSize="11"
+                   VerticalAlignment="Center"/>
+        <TextBlock Grid.Column="1"
+                   Text="{Binding CursorPosition}"
+                   Foreground="#405060" FontSize="11"
+                   VerticalAlignment="Center"
+                   FontFamily="Consolas, Courier New, monospace"/>
+      </Grid>
+    </Border>
+
+  </Grid>
+</UserControl>
