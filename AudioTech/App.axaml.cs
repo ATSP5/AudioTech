@@ -51,7 +51,7 @@ public partial class App : global::Avalonia.Application
         services.AddSingleton<SettingsViewModel>();
         services.AddSingleton<RecordPlayViewModel>();
         services.AddSingleton<MainPageViewModel>();
-        services.AddSingleton<RoomAcousticsViewModel>();
+        services.AddSingleton<RoomAcousticsViewModel>();   // gets IAudioCaptureService + IMeasurementAnalysisService injected
         services.AddSingleton<MainViewModel>();
 
         return services.BuildServiceProvider();

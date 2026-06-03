@@ -199,104 +199,185 @@
         <ScrollViewer VerticalScrollBarVisibility="Auto">
           <StackPanel Margin="10,8" Spacing="2">
 
-            <!-- ── Room walls ───────────────────────────── -->
-            <TextBlock Classes="section" Text="ROOM WALLS"/>
-
-            <TextBlock Classes="panel-label" Text="Surface"/>
-            <ComboBox ItemsSource="{x:Static vm:RoomAcousticsViewModel.SurfaceNames}"
-                      SelectedIndex="{Binding WallSurfaceIndex}"
-                      HorizontalAlignment="Stretch"/>
-
-            <TextBlock Classes="panel-label" Text="Irregularity"/>
-            <Grid ColumnDefinitions="*,30">
-              <Slider Grid.Column="0"
-                      Minimum="0" Maximum="1"
-                      Value="{Binding WallIrregularity}"
-                      TickFrequency="0.1"/>
-              <TextBlock Grid.Column="1"
-                         Text="{Binding WallIrregularity, StringFormat={}{0:F2}}"
-                         Foreground="#607080" FontSize="10"
-                         VerticalAlignment="Center" Margin="4,0,0,0"/>
+            <!-- ── Mode toggle ────────────────────────────── -->
+            <Grid ColumnDefinitions="*,*" Margin="0,0,0,6">
+              <Button Grid.Column="0" Classes="mode" Classes.active="{Binding IsSimulationMode}"
+                      Command="{Binding SetSimulationModeCommand}"
+                      HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                      Content="Simulation" FontSize="11"/>
+              <Button Grid.Column="1" Classes="mode" Classes.active="{Binding IsMeasureMode}"
+                      Command="{Binding SetMeasureModeCommand}"
+                      HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                      Content="Measure" FontSize="11"/>
             </Grid>
 
-            <!-- ── Obstacles ────────────────────────────── -->
-            <TextBlock Classes="section" Text="NEW OBSTACLE"/>
+            <!-- ════════════ SIMULATION PANEL ════════════ -->
+            <StackPanel IsVisible="{Binding IsSimulationMode}">
 
-            <TextBlock Classes="panel-label" Text="Surface"/>
-            <ComboBox ItemsSource="{x:Static vm:RoomAcousticsViewModel.SurfaceNames}"
-                      SelectedIndex="{Binding ObstacleSurfaceIndex}"
-                      HorizontalAlignment="Stretch"/>
+              <!-- Room walls -->
+              <TextBlock Classes="section" Text="ROOM WALLS"/>
+              <TextBlock Classes="panel-label" Text="Surface"/>
+              <ComboBox ItemsSource="{x:Static vm:RoomAcousticsViewModel.SurfaceNames}"
+                        SelectedIndex="{Binding WallSurfaceIndex}"
+                        HorizontalAlignment="Stretch"/>
+              <TextBlock Classes="panel-label" Text="Irregularity"/>
+              <Grid ColumnDefinitions="*,30">
+                <Slider Grid.Column="0" Minimum="0" Maximum="1" Value="{Binding WallIrregularity}" TickFrequency="0.1"/>
+                <TextBlock Grid.Column="1" Text="{Binding WallIrregularity, StringFormat={}{0:F2}}"
+                           Foreground="#607080" FontSize="10" VerticalAlignment="Center" Margin="4,0,0,0"/>
+              </Grid>
 
-            <TextBlock Classes="panel-label" Text="Irregularity"/>
-            <Grid ColumnDefinitions="*,30">
-              <Slider Grid.Column="0"
-                      Minimum="0" Maximum="1"
-                      Value="{Binding ObstacleIrregularity}"
-                      TickFrequency="0.1"/>
-              <TextBlock Grid.Column="1"
-                         Text="{Binding ObstacleIrregularity, StringFormat={}{0:F2}}"
-                         Foreground="#607080" FontSize="10"
-                         VerticalAlignment="Center" Margin="4,0,0,0"/>
-            </Grid>
+              <!-- Obstacles -->
+              <TextBlock Classes="section" Text="NEW OBSTACLE"/>
+              <TextBlock Classes="panel-label" Text="Surface"/>
+              <ComboBox ItemsSource="{x:Static vm:RoomAcousticsViewModel.SurfaceNames}"
+                        SelectedIndex="{Binding ObstacleSurfaceIndex}"
+                        HorizontalAlignment="Stretch"/>
+              <TextBlock Classes="panel-label" Text="Irregularity"/>
+              <Grid ColumnDefinitions="*,30">
+                <Slider Grid.Column="0" Minimum="0" Maximum="1" Value="{Binding ObstacleIrregularity}" TickFrequency="0.1"/>
+                <TextBlock Grid.Column="1" Text="{Binding ObstacleIrregularity, StringFormat={}{0:F2}}"
+                           Foreground="#607080" FontSize="10" VerticalAlignment="Center" Margin="4,0,0,0"/>
+              </Grid>
 
-            <!-- ── Sound Source ─────────────────────────── -->
-            <TextBlock Classes="section" Text="SOUND SOURCE"/>
+              <!-- Sound Source -->
+              <TextBlock Classes="section" Text="SOUND SOURCE"/>
+              <TextBlock Classes="panel-label" Text="Level (dB SPL @ 1 m)"/>
+              <Grid ColumnDefinitions="*,36">
+                <Slider Grid.Column="0" Minimum="60" Maximum="140" Value="{Binding SourceLevelDb}" TickFrequency="1"/>
+                <TextBlock Grid.Column="1" Text="{Binding SourceLevelDb, StringFormat={}{0:F0}}"
+                           Foreground="#607080" FontSize="10" VerticalAlignment="Center" Margin="4,0,0,0"/>
+              </Grid>
 
-            <TextBlock Classes="panel-label" Text="Source Level (dB SPL @ 1 m)"/>
-            <Grid ColumnDefinitions="*,36">
-              <Slider Grid.Column="0"
-                      Minimum="60" Maximum="140"
-                      Value="{Binding SourceLevelDb}"
-                      TickFrequency="1"/>
-              <TextBlock Grid.Column="1"
-                         Text="{Binding SourceLevelDb, StringFormat={}{0:F0}}"
-                         Foreground="#607080" FontSize="10"
-                         VerticalAlignment="Center" Margin="4,0,0,0"/>
-            </Grid>
+              <!-- Grid resolution + Process -->
+              <TextBlock Classes="section" Text="SIMULATION"/>
+              <TextBlock Classes="panel-label" Text="Grid Resolution"/>
+              <Grid ColumnDefinitions="*,30">
+                <Slider Grid.Column="0" Minimum="40" Maximum="160" Value="{Binding GridResolution}" TickFrequency="10"/>
+                <TextBlock Grid.Column="1" Text="{Binding GridResolution}"
+                           Foreground="#607080" FontSize="10" VerticalAlignment="Center" Margin="4,0,0,0"/>
+              </Grid>
 
-            <!-- ── Simulation ────────────────────────────── -->
-            <TextBlock Classes="section" Text="SIMULATION"/>
+              <Button Classes="primary" Command="{Binding ComputeHeatmapCommand}"
+                      HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                      Margin="0,8,0,0" IsEnabled="{Binding !IsComputing}">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                  <PathIcon Width="14" Height="14" Data="M8,5 L8,19 L19,12 Z"/>
+                  <TextBlock IsVisible="{Binding !IsComputing}" Text="Process"/>
+                  <TextBlock IsVisible="{Binding IsComputing}"  Text="Computing…"/>
+                </StackPanel>
+              </Button>
 
-            <TextBlock Classes="panel-label" Text="Grid Resolution"/>
-            <Grid ColumnDefinitions="*,30">
-              <Slider Grid.Column="0"
-                      Minimum="40" Maximum="160"
-                      Value="{Binding GridResolution}"
-                      TickFrequency="10"/>
-              <TextBlock Grid.Column="1"
-                         Text="{Binding GridResolution}"
-                         Foreground="#607080" FontSize="10"
-                         VerticalAlignment="Center" Margin="4,0,0,0"/>
-            </Grid>
+            </StackPanel>
 
-            <Button Classes="primary"
-                    Command="{Binding ComputeHeatmapCommand}"
-                    HorizontalAlignment="Stretch"
-                    HorizontalContentAlignment="Center"
-                    Margin="0,8,0,0"
-                    IsEnabled="{Binding !IsComputing}">
-              <StackPanel Orientation="Horizontal" Spacing="6">
-                <PathIcon Width="14" Height="14"
-                          Data="M8,5 L8,19 L19,12 Z"/>
-                <TextBlock IsVisible="{Binding !IsComputing}" Text="Process"/>
-                <TextBlock IsVisible="{Binding IsComputing}"  Text="Computing…"/>
-              </StackPanel>
-            </Button>
+            <!-- ════════════ MEASURE PANEL ════════════ -->
+            <StackPanel IsVisible="{Binding IsMeasureMode}">
 
-            <!-- ── Clear actions ─────────────────────────── -->
+              <!-- Wall properties (shared) -->
+              <TextBlock Classes="section" Text="ROOM WALLS"/>
+              <TextBlock Classes="panel-label" Text="Surface"/>
+              <ComboBox ItemsSource="{x:Static vm:RoomAcousticsViewModel.SurfaceNames}"
+                        SelectedIndex="{Binding WallSurfaceIndex}"
+                        HorizontalAlignment="Stretch"/>
+
+              <!-- Microphone sources list -->
+              <TextBlock Classes="section" Text="MICROPHONE SOURCES"/>
+              <TextBlock IsVisible="{Binding MicConfigs.Count, Converter={x:Static ObjectConverters.IsNull}}"
+                         Text="Place microphones on the canvas first."
+                         Foreground="#506878" FontSize="10" TextWrapping="Wrap"/>
+
+              <ItemsControl ItemsSource="{Binding MicConfigs}" Margin="0,2,0,0">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate DataType="vm:MicrophoneConfigViewModel">
+
+                    <Border Background="#1A2840" CornerRadius="4" Margin="0,3" Padding="6,5">
+                      <StackPanel Spacing="4">
+
+                        <!-- Label row -->
+                        <TextBlock Text="{Binding Label}" FontSize="11" FontWeight="SemiBold"
+                                   Foreground="#90C8FF"/>
+
+                        <!-- Source type toggle -->
+                        <Grid ColumnDefinitions="*,*">
+                          <Button Grid.Column="0" Classes="src-toggle"
+                                  Classes.active="{Binding UseFile}"
+                                  Command="{Binding SetFileSourceCommand}"
+                                  Content="📁 File" FontSize="10"
+                                  HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"/>
+                          <Button Grid.Column="1" Classes="src-toggle"
+                                  Classes.active="{Binding IsLiveDevice}"
+                                  Command="{Binding SetLiveSourceCommand}"
+                                  Content="🎤 Live" FontSize="10"
+                                  HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"/>
+                        </Grid>
+
+                        <!-- File section -->
+                        <Grid ColumnDefinitions="*,Auto" IsVisible="{Binding UseFile}">
+                          <TextBlock Grid.Column="0" Text="{Binding FileDisplayName}"
+                                     FontSize="10" Foreground="#7090B0"
+                                     VerticalAlignment="Center"
+                                     TextTrimming="CharacterEllipsis"/>
+                          <Button Grid.Column="1" Classes="sm" FontSize="10"
+                                  Command="{Binding BrowseFileCommand}"
+                                  Content="…" Margin="4,0,0,0" Width="26"/>
+                        </Grid>
+
+                        <!-- Live device section -->
+                        <ComboBox IsVisible="{Binding IsLiveDevice}"
+                                  ItemsSource="{Binding DeviceNames}"
+                                  SelectedIndex="{Binding SelectedDeviceIndex}"
+                                  FontSize="10" HorizontalAlignment="Stretch"/>
+
+                        <!-- Result -->
+                        <TextBlock Text="{Binding SplDisplay}" FontSize="10"
+                                   Foreground="#80EE90" TextWrapping="Wrap"
+                                   IsVisible="{Binding !HasError}"/>
+                        <TextBlock Text="{Binding SplDisplay}" FontSize="10"
+                                   Foreground="#EE8080" TextWrapping="Wrap"
+                                   IsVisible="{Binding HasError}"/>
+                        <TextBlock Text="{Binding TimeOffsetDisplay}" FontSize="9"
+                                   Foreground="#AACC80"
+                                   IsVisible="{Binding TimeOffsetDisplay.Length}"/>
+
+                      </StackPanel>
+                    </Border>
+
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+
+              <!-- Grid resolution -->
+              <TextBlock Classes="section" Text="GRID RESOLUTION"/>
+              <Grid ColumnDefinitions="*,30">
+                <Slider Grid.Column="0" Minimum="40" Maximum="160" Value="{Binding GridResolution}" TickFrequency="10"/>
+                <TextBlock Grid.Column="1" Text="{Binding GridResolution}"
+                           Foreground="#607080" FontSize="10" VerticalAlignment="Center" Margin="4,0,0,0"/>
+              </Grid>
+
+              <!-- Analyze button -->
+              <Button Classes="primary" Command="{Binding AnalyzeMeasurementsCommand}"
+                      HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                      Margin="0,8,0,0" IsEnabled="{Binding !IsAnalyzing}">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                  <PathIcon Width="14" Height="14"
+                            Data="M12,2 A3,3 0 0 1 15,5 V11 A3,3 0 0 1 9,11 V5 A3,3 0 0 1 12,2 M7,11 C7,14.3 17,14.3 17,11 M12,14 V18 M9,18 H15"/>
+                  <TextBlock IsVisible="{Binding !IsAnalyzing}" Text="Analyze"/>
+                  <TextBlock IsVisible="{Binding IsAnalyzing}"  Text="Analyzing…"/>
+                </StackPanel>
+              </Button>
+
+            </StackPanel>
+
+            <!-- ── Clear actions (always visible) ─────────── -->
             <TextBlock Classes="section" Text="CLEAR"/>
-
             <WrapPanel Orientation="Horizontal">
-              <Button Classes="sm" Command="{Binding ClearRoomCommand}" Margin="0,2,4,2" Content="Room"/>
-              <Button Classes="sm" Command="{Binding ClearObstaclesCommand}" Margin="0,2,4,2" Content="Obstacles"/>
+              <Button Classes="sm" Command="{Binding ClearRoomCommand}"        Margin="0,2,4,2" Content="Room"/>
+              <Button Classes="sm" Command="{Binding ClearObstaclesCommand}"   Margin="0,2,4,2" Content="Obstacles"/>
               <Button Classes="sm" Command="{Binding ClearMicrophonesCommand}" Margin="0,2,4,2" Content="Mics"/>
             </WrapPanel>
-            <Button Classes="danger"
-                    Command="{Binding ClearAllCommand}"
-                    HorizontalAlignment="Stretch"
-                    HorizontalContentAlignment="Center"
-                    Margin="0,4,0,0"
-                    Content="Clear All"/>
+            <Button Classes="danger" Command="{Binding ClearAllCommand}"
+                    HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                    Margin="0,4,0,0" Content="Clear All"/>
 
           </StackPanel>
         </ScrollViewer>

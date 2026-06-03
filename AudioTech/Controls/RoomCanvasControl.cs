@@ -166,10 +166,17 @@ public sealed class RoomCanvasControl : Control
 
         DrawInProgress(ctx);
 
+        // Microphones — look up measured SPL from MicConfigs in measure mode
         foreach (var mic in _vm.Microphones)
-            DrawMic(ctx, mic);
+        {
+            var cfg = _vm.IsMeasureMode
+                ? _vm.MicConfigs.FirstOrDefault(c => c.Node.Id == mic.Id)
+                : null;
+            DrawMic(ctx, mic, cfg);
+        }
 
-        if (_vm.SoundSource is { } src)
+        // Stage only shown in simulation mode
+        if (_vm.IsSimulationMode && _vm.SoundSource is { } src)
             DrawStage(ctx, src);
 
         if (_vm.RoomPolygon.Count >= 3)
@@ -177,6 +184,7 @@ public sealed class RoomCanvasControl : Control
 
         DrawCrosshair(ctx, bounds);
         DrawSnapDot(ctx);
+        DrawModeLabel(ctx, bounds);
 
         if (_vm.RoomPolygon.Count == 0 && _vm.DrawingPoints.Count == 0)
             DrawHint(ctx, bounds,
@@ -373,14 +381,63 @@ public sealed class RoomCanvasControl : Control
 
     // ── Microphone ────────────────────────────────────────────────────────────
 
-    private void DrawMic(DrawingContext ctx, MicrophoneNode mic)
+    private void DrawMic(DrawingContext ctx, MicrophoneNode mic, MicrophoneConfigViewModel? cfg = null)
     {
         var c = RoomToCanvas(mic.Position);
         const double r = 7;
-        ctx.DrawEllipse(MicFill, MicPen, c, r, r);
-        ctx.DrawLine(new Pen(MicLabel, 1), new Point(c.X - r + 2, c.Y), new Point(c.X + r - 2, c.Y));
-        ctx.DrawLine(new Pen(MicLabel, 1), new Point(c.X, c.Y - r + 2), new Point(c.X, c.Y + r - 2));
+
+        // Highlight mics that have a measurement result
+        bool hasSpl = cfg?.MeasuredSpl is not null;
+        var fillBrush = hasSpl ? new SolidColorBrush(Color.FromRgb(0x20, 0xFF, 0x80)) : MicFill;
+        var penBrush  = hasSpl ? new SolidColorBrush(Color.FromRgb(0x80, 0xFF, 0xCC)) : MicPen.Brush!;
+
+        ctx.DrawEllipse(fillBrush, new Pen(penBrush, 1.5), c, r, r);
+        ctx.DrawLine(new Pen(penBrush, 1), new Point(c.X - r + 2, c.Y), new Point(c.X + r - 2, c.Y));
+        ctx.DrawLine(new Pen(penBrush, 1), new Point(c.X, c.Y - r + 2), new Point(c.X, c.Y + r - 2));
+
         ctx.DrawText(Fmt(mic.Label, 10, MicLabel), new Point(c.X + r + 3, c.Y - 6));
+
+        // In measure mode, show source indicator and measured SPL
+        if (cfg is not null)
+        {
+            string srcIcon = cfg.UseFile ? "F" : "L";
+            ctx.DrawText(Fmt(srcIcon, 8, new SolidColorBrush(Color.FromRgb(0xAA, 0xCC, 0xFF))),
+                         new Point(c.X - 3, c.Y - r - 12));
+
+            if (cfg.MeasuredSpl is { } spl)
+            {
+                var splFt = Fmt($"{spl:F1} dBFS", 9,
+                    cfg.HasError
+                        ? new SolidColorBrush(Color.FromRgb(0xFF, 0x80, 0x80))
+                        : new SolidColorBrush(Color.FromRgb(0xCC, 0xFF, 0xAA)));
+                ctx.DrawText(splFt, new Point(c.X + r + 3, c.Y + 4));
+            }
+
+            if (cfg.TimeOffsetDisplay is { Length: > 0 } td)
+            {
+                ctx.DrawText(Fmt(td, 8, new SolidColorBrush(Color.FromRgb(0xCC, 0xCC, 0x80))),
+                             new Point(c.X + r + 3, c.Y + 15));
+            }
+        }
+    }
+
+    // ── Mode label (top-left badge) ───────────────────────────────────────────
+
+    private static readonly IBrush SimModeBg  = new SolidColorBrush(Color.FromArgb(0xCC, 0x18, 0x3A, 0x60));
+    private static readonly IBrush MeasModeBg = new SolidColorBrush(Color.FromArgb(0xCC, 0x18, 0x50, 0x30));
+    private static readonly IBrush ModeLabelFg = new SolidColorBrush(Color.FromRgb(0xCC, 0xEE, 0xFF));
+
+    private void DrawModeLabel(DrawingContext ctx, Rect bounds)
+    {
+        if (_vm is null) return;
+        string label = _vm.IsSimulationMode ? "SIMULATION" : "MEASURE";
+        var brush    = _vm.IsSimulationMode ? SimModeBg   : MeasModeBg;
+
+        var ft = Fmt(label, 10, ModeLabelFg);
+        double px = 6, py = 6;
+        ctx.DrawRectangle(brush, null, new Rect(px - 4, py - 2, ft.Width + 8, ft.Height + 4),
+                          3, 3);
+        ctx.DrawText(ft, new Point(px, py));
     }
 
     // ── Stage ─────────────────────────────────────────────────────────────────
