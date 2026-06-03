@@ -65,6 +65,7 @@ public sealed class RoomCanvasControl : Control
     private static readonly IBrush MicFill     = new SolidColorBrush(Color.FromRgb(0x20, 0xCC, 0x60));
     private static readonly IPen   MicPen      = new Pen(new SolidColorBrush(Color.FromRgb(0x44, 0xFF, 0x88)), 1.5);
     private static readonly IBrush MicLabel    = new SolidColorBrush(Color.FromRgb(0x66, 0xFF, 0xAA));
+    private static readonly IPen   MicSelected = new Pen(new SolidColorBrush(Color.FromRgb(0xFF, 0xFF, 0x00)), 2.5);
 
     private static readonly IBrush StageFill   = new SolidColorBrush(Color.FromRgb(0xDD, 0x40, 0x40));
     private static readonly IPen   StagePen    = new Pen(new SolidColorBrush(Color.FromRgb(0xFF, 0x70, 0x70)), 1.5);
@@ -172,7 +173,8 @@ public sealed class RoomCanvasControl : Control
             var cfg = _vm.IsMeasureMode
                 ? _vm.MicConfigs.FirstOrDefault(c => c.Node.Id == mic.Id)
                 : null;
-            DrawMic(ctx, mic, cfg);
+            bool isSelected = _vm.SelectedMicrophone?.Id == mic.Id;
+            DrawMic(ctx, mic, cfg, isSelected);
         }
 
         // Stage only shown in simulation mode
@@ -381,10 +383,14 @@ public sealed class RoomCanvasControl : Control
 
     // ── Microphone ────────────────────────────────────────────────────────────
 
-    private void DrawMic(DrawingContext ctx, MicrophoneNode mic, MicrophoneConfigViewModel? cfg = null)
+    private void DrawMic(DrawingContext ctx, MicrophoneNode mic, MicrophoneConfigViewModel? cfg = null, bool isSelected = false)
     {
         var c = RoomToCanvas(mic.Position);
         const double r = 7;
+
+        // Selection highlight (yellow halo)
+        if (isSelected)
+            ctx.DrawEllipse(null, MicSelected, c, r + 4, r + 4);
 
         // Highlight mics that have a measurement result
         bool hasSpl = cfg?.MeasuredSpl is not null;

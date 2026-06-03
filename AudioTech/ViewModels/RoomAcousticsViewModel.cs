@@ -48,6 +48,10 @@ public partial class RoomAcousticsViewModel : ViewModelBase
     private double     _panDragStartX, _panDragStartY;
     private double     _panXAtDragStart, _panYAtDragStart;
 
+    // ── Microphone selection & dragging ───────────────────────────────────────
+    [ObservableProperty] private MicrophoneNode? _selectedMicrophone;
+    private bool            _isDraggingMicrophone;
+
     // ── Canvas transform ──────────────────────────────────────────────────────
     [ObservableProperty] private double _zoom = 1.0;
     [ObservableProperty] private double _panX = 0.0;
@@ -163,6 +167,7 @@ public partial class RoomAcousticsViewModel : ViewModelBase
             DrawingTool.DrawObstacle    => "Click 1st corner, then 2nd corner.",
             DrawingTool.PlaceMicrophone => "Click to place a microphone.",
             DrawingTool.PlaceStage      => "Click to place the sound source.",
+            DrawingTool.Select          => "Click to select a microphone. Drag to move. Right-click to delete.",
             _                          => "Click to select.",
         };
         NotifyRedraw();
@@ -185,15 +190,47 @@ public partial class RoomAcousticsViewModel : ViewModelBase
             return;
         }
 
-        if (isRight) { CancelDrawing(); return; }
+        // Right-click: delete selected microphone or cancel drawing
+        if (isRight)
+        {
+            if (SelectedMicrophone is not null && CurrentTool == DrawingTool.Select)
+            {
+                DeleteMicrophone(SelectedMicrophone);
+                SelectedMicrophone = null;
+            }
+            else
+            {
+                CancelDrawing();
+            }
+            return;
+        }
+
         if (!isLeft) return;
 
-        switch (CurrentTool)
+        // Select tool: pick and drag microphones
+        if (CurrentTool == DrawingTool.Select)
         {
-            case DrawingTool.DrawRoom:        HandleDrawRoomClick(snapped);        break;
-            case DrawingTool.DrawObstacle:    HandleDrawObstacleClick(snapped);    break;
-            case DrawingTool.PlaceMicrophone: PlaceMicrophoneAt(snapped);          break;
-            case DrawingTool.PlaceStage:      PlaceStageAt(snapped);               break;
+            var nearbyMic = FindMicrophoneAt(roomPos, selectRadius: 0.3);
+            if (nearbyMic is not null)
+            {
+                SelectedMicrophone = nearbyMic;
+                _isDraggingMicrophone = true;
+                StatusText = $"Dragging {nearbyMic.Label}. Right-click to delete.";
+            }
+            else
+            {
+                SelectedMicrophone = null;
+            }
+        }
+        else
+        {
+            switch (CurrentTool)
+            {
+                case DrawingTool.DrawRoom:        HandleDrawRoomClick(snapped);        break;
+                case DrawingTool.DrawObstacle:    HandleDrawObstacleClick(snapped);    break;
+                case DrawingTool.PlaceMicrophone: PlaceMicrophoneAt(snapped);          break;
+                case DrawingTool.PlaceStage:      PlaceStageAt(snapped);               break;
+            }
         }
         NotifyRedraw();
     }
@@ -210,12 +247,21 @@ public partial class RoomAcousticsViewModel : ViewModelBase
             PanY = _panYAtDragStart + (offsetY - _panDragStartY);
         }
 
+        if (_isDraggingMicrophone && SelectedMicrophone is not null && leftHeld)
+        {
+            var snapped = SnapToGrid(roomPos);
+            SelectedMicrophone.MoveTo(snapped);
+            HeatmapBitmap = null;  // invalidate heatmap
+            HeatmapResult = null;
+        }
+
         NotifyRedraw();
     }
 
     public void OnPointerUp(bool isMiddle)
     {
         if (isMiddle) _isPanning = false;
+        _isDraggingMicrophone = false;
     }
 
     public void OnWheel(double delta, double offsetX, double offsetY)
@@ -313,6 +359,26 @@ public partial class RoomAcousticsViewModel : ViewModelBase
         DrawingPoints        = [];
         _obstacleFirstCorner = null;
         StatusText           = "Drawing cancelled.";
+    }
+
+    // ── Microphone selection & deletion ───────────────────────────────────────
+
+    private MicrophoneNode? FindMicrophoneAt(RoomPoint roomPos, double selectRadius)
+    {
+        return Microphones.FirstOrDefault(mic => mic.Position.DistanceTo(roomPos) <= selectRadius);
+    }
+
+    private void DeleteMicrophone(MicrophoneNode mic)
+    {
+        Microphones = Microphones.Where(m => m.Id != mic.Id).ToList();
+
+        var cfg = MicConfigs.FirstOrDefault(c => c.Node.Id == mic.Id);
+        if (cfg is not null) MicConfigs.Remove(cfg);
+
+        HeatmapBitmap = null;
+        HeatmapResult = null;
+        StatusText = $"Deleted {mic.Label}.";
+        NotifyRedraw();
     }
 
     // ── Commands ──────────────────────────────────────────────────────────────

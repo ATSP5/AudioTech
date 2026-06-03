@@ -9,7 +9,9 @@
       "Bash(timeout 15 dotnet run -c Release)",
       "Bash(dotnet run *)",
       "Bash(git add *)",
-      "Bash(git commit -m 'Fix compilation errors and wire up measurement analysis pipeline *)"
+      "Bash(git commit -m 'Fix compilation errors and wire up measurement analysis pipeline *)",
+      "Bash(git commit -m 'Add missing button styles for mode and source-type toggles *)",
+      "Bash(git commit -m 'Add microphone selection, dragging, and deletion features *)"
     ]
   }
 }
